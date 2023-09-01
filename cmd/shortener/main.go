@@ -57,7 +57,7 @@ func shortenerHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func expanderHandler(res http.ResponseWriter, req *http.Request) {
-	shortcut, _ := strings.CutPrefix(req.RequestURI, routeUri)
+	shortcut := strings.TrimPrefix(req.RequestURI, routeUri)
 	if len(shortcut) == 0 {
 		http.Error(res, "invalid shortcut", errorHttpCode)
 		return
