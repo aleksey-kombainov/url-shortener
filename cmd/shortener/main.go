@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/go-http-utils/headers"
+	"github.com/ldez/mimetype"
 	"io"
 	"net/http"
 	"strings"
@@ -40,7 +41,7 @@ func routerHandler(res http.ResponseWriter, req *http.Request) {
 
 func shortenerHandler(res http.ResponseWriter, req *http.Request) {
 
-	if req.Header.Get("Content-Type") != "text/plain" {
+	if req.Header.Get(headers.ContentType) != mimetype.TextPlain {
 		http.Error(res, fmt.Sprintf("Content-type \"%s\" not allowed", req.Header.Get("Content-Type")), errorHttpCode)
 		return
 	}
