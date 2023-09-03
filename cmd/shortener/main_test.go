@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/aleksey-kombainov/url-shortener.git/pkg/config"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
 	"github.com/stretchr/testify/assert"
@@ -51,7 +52,7 @@ func TestShortenerOK(t *testing.T) {
 			require.NoError(t, err)
 			assert.NotEmpty(t, string(resBody))
 
-			shortcuts[strings.TrimPrefix(string(resBody), "localhost:8080/")] = test.postData
+			shortcuts[strings.TrimPrefix(string(resBody), config.GetOptions().BaseUrl+baseUri)] = test.postData
 		})
 	}
 

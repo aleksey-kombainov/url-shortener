@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/aleksey-kombainov/url-shortener.git/pkg/config"
 	"github.com/aleksey-kombainov/url-shortener.git/pkg/memstorage"
 	"github.com/aleksey-kombainov/url-shortener.git/pkg/random"
 	"github.com/go-chi/chi/v5"
@@ -37,7 +38,7 @@ func main() {
 func run() error {
 	mux := getRouter()
 
-	return http.ListenAndServe(`:8080`, mux)
+	return http.ListenAndServe(config.GetOptions().ServerListenAddr, mux)
 }
 
 func getRouter() *chi.Mux {
@@ -82,7 +83,10 @@ func shortenerHandler(res http.ResponseWriter, req *http.Request) {
 	}
 	res.Header().Add(headers.ContentType, mimetype.TextPlain)
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte("localhost:8080/" + shortcut))
+	_, err = res.Write([]byte(config.GetOptions().BaseUrl + "/" + shortcut))
+	if err != nil {
+		logger(err)
+	}
 }
 
 func expanderHandler(res http.ResponseWriter, req *http.Request) {
@@ -118,4 +122,8 @@ func getAndSaveUniqueShortcut(url string) (string, error) {
 	}
 	storage.Put(shortcut, url)
 	return shortcut, nil
+}
+
+func logger(err error) {
+	fmt.Println(err.Error())
 }
