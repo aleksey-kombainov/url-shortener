@@ -101,7 +101,7 @@ func getAndSaveUniqueShortcut(url string) (string, error) {
 			break
 		}
 	}
-	if isGenerated == false {
+	if !isGenerated {
 		return "", errors.New("generator limit exceeded")
 	}
 	storage.Put(shortcut, url)
