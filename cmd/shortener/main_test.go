@@ -40,7 +40,7 @@ func TestShortenerOK(t *testing.T) {
 			request.Header.Add(headers.ContentType, mimetype.TextPlain)
 
 			recorder := httptest.NewRecorder()
-			routerHandler(recorder, request)
+			getRouter().ServeHTTP(recorder, request)
 			res := recorder.Result()
 
 			assert.Equal(t, http.StatusCreated, res.StatusCode)
@@ -62,7 +62,7 @@ func TestShortenerOK(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, baseUri+shortcut, nil)
 
 			recorder := httptest.NewRecorder()
-			routerHandler(recorder, request)
+			getRouter().ServeHTTP(recorder, request)
 			res := recorder.Result()
 
 			assert.Equal(t, http.StatusTemporaryRedirect, res.StatusCode)
@@ -108,7 +108,7 @@ func TestShortenerFailure(t *testing.T) {
 			request.Header.Add(headers.ContentType, test.contentType)
 
 			recorder := httptest.NewRecorder()
-			routerHandler(recorder, request)
+			getRouter().ServeHTTP(recorder, request)
 			res := recorder.Result()
 
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)

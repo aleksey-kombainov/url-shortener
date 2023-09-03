@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/aleksey-kombainov/url-shortener.git/pkg/memstorage"
 	"github.com/aleksey-kombainov/url-shortener.git/pkg/random"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
 	"io"
@@ -34,20 +35,27 @@ func main() {
 }
 
 func run() error {
-	mux := http.NewServeMux()
-	mux.HandleFunc(routeURI, routerHandler)
+	mux := getRouter()
 
 	return http.ListenAndServe(`:8080`, mux)
 }
 
-func routerHandler(res http.ResponseWriter, req *http.Request) {
-	if req.Method == http.MethodPost && req.RequestURI == "/" {
+func getRouter() *chi.Mux {
+	mux := chi.NewRouter()
+	mux.Post("/", func(res http.ResponseWriter, req *http.Request) {
 		shortenerHandler(res, req)
-	} else if req.Method == http.MethodGet {
+	})
+	mux.Get("/{shortcut}", func(res http.ResponseWriter, req *http.Request) {
 		expanderHandler(res, req)
-	} else {
-		http.Error(res, "bad request", errorHTTPCode)
-	}
+	})
+	mux.NotFound(routerErrorHandler)
+	mux.MethodNotAllowed(routerErrorHandler)
+
+	return mux
+}
+
+func routerErrorHandler(res http.ResponseWriter, req *http.Request) {
+	http.Error(res, "", errorHTTPCode)
 }
 
 func shortenerHandler(res http.ResponseWriter, req *http.Request) {
