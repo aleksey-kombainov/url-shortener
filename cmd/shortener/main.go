@@ -41,7 +41,7 @@ func run() error {
 }
 
 func routerHandler(res http.ResponseWriter, req *http.Request) {
-	if req.Method == http.MethodPost {
+	if req.Method == http.MethodPost && req.RequestURI == "/" {
 		shortenerHandler(res, req)
 	} else if req.Method == http.MethodGet {
 		expanderHandler(res, req)
@@ -62,13 +62,17 @@ func shortenerHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	urlStr := strings.TrimSpace(string(url)) // @todo валидация url
+	if urlStr == "" {
+		http.Error(res, "invalid url", errorHTTPCode)
+		return
+	}
 
 	shortcut, err := getAndSaveUniqueShortcut(urlStr)
 	if err != nil {
 		http.Error(res, err.Error(), errorHTTPCode)
 		return
 	}
-
+	res.Header().Add(headers.ContentType, mimetype.TextPlain)
 	res.WriteHeader(http.StatusCreated)
 	res.Write([]byte("localhost:8080/" + shortcut))
 }
