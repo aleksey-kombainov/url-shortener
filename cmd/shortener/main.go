@@ -1,7 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"github.com/aleksey-kombainov/url-shortener.git/pkg/memstorage"
+	"github.com/aleksey-kombainov/url-shortener.git/pkg/random"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
 	"io"
@@ -10,11 +13,19 @@ import (
 )
 
 const (
-	routeURI        = `/`
-	errorHTTPCode   = http.StatusBadRequest
-	shortenerResult = "http://localhost:8080/EwHXdJfB"
-	expanderResult  = "https://practicum.yandex.ru/"
+	routeURI                = `/`
+	errorHTTPCode           = http.StatusBadRequest
+	shortcutLength          = 8
+	generatorIterationLimit = 10000
 )
+
+type Storager interface {
+	Put(key string, val string)
+	GetValueByKey(key string) (string, error)
+	GetKeyByValue(val string) (string, error)
+}
+
+var storage Storager = memstorage.NewStorage()
 
 func main() {
 	if err := run(); err != nil {
@@ -45,15 +56,21 @@ func shortenerHandler(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, fmt.Sprintf("Content-type \"%s\" not allowed", req.Header.Get("Content-Type")), errorHTTPCode)
 		return
 	}
-	// @todo
-	//url, err := io.ReadAll(req.Body)
-	_, err := io.ReadAll(req.Body)
+	url, err := io.ReadAll(req.Body)
 	if err != nil {
 		http.Error(res, err.Error(), errorHTTPCode)
 		return
 	}
+	urlStr := strings.TrimSpace(string(url)) // @todo валидация url
+
+	shortcut, err := getAndSaveUniqueShortcut(urlStr)
+	if err != nil {
+		http.Error(res, err.Error(), errorHTTPCode)
+		return
+	}
+
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(shortenerResult))
+	res.Write([]byte("localhost:8080/" + shortcut))
 }
 
 func expanderHandler(res http.ResponseWriter, req *http.Request) {
@@ -62,6 +79,31 @@ func expanderHandler(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "invalid shortcut", errorHTTPCode)
 		return
 	}
-	res.Header().Add(headers.Location, expanderResult)
+	url, err := storage.GetValueByKey(shortcut)
+	if err != nil {
+		http.Error(res, "shortcut not found", errorHTTPCode)
+		return
+	}
+	res.Header().Add(headers.Location, url) // @todo проверить редирект на самого себя
 	res.WriteHeader(http.StatusTemporaryRedirect)
+}
+
+/*
+один урл генерирует разные шорткаты. из задания не понятно, верно ли такое поведение
+*/
+func getAndSaveUniqueShortcut(url string) (string, error) {
+	var shortcut string
+	isGenerated := false
+	for i := 0; i < generatorIterationLimit; i++ {
+		shortcut = random.GenString(shortcutLength)
+		if _, err := storage.GetValueByKey(shortcut); err != nil {
+			isGenerated = true
+			break
+		}
+	}
+	if isGenerated == false {
+		return "", errors.New("generator limit exceeded")
+	}
+	storage.Put(shortcut, url)
+	return shortcut, nil
 }
