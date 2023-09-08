@@ -41,6 +41,7 @@ func run() error {
 }
 
 func routerHandler(res http.ResponseWriter, req *http.Request) {
+
 	if req.Method == http.MethodPost {
 		shortenerHandler(res, req)
 	} else if req.Method == http.MethodGet {
@@ -52,10 +53,13 @@ func routerHandler(res http.ResponseWriter, req *http.Request) {
 
 func shortenerHandler(res http.ResponseWriter, req *http.Request) {
 
-	if req.Header.Get(headers.ContentType) != mimetype.TextPlain {
-		http.Error(res, fmt.Sprintf("Content-type \"%s\" not allowed", req.Header.Get("Content-Type")), errorHTTPCode)
+	mtypeSlice := strings.Split(req.Header.Get(headers.ContentType), ";")
+	mtype := strings.TrimSpace(mtypeSlice[0])
+	if mtype != mimetype.TextPlain {
+		http.Error(res, fmt.Sprintf("Content-type \"%s\" not allowed", mtype), errorHTTPCode)
 		return
 	}
+	defer req.Body.Close()
 	url, err := io.ReadAll(req.Body)
 	if err != nil {
 		http.Error(res, err.Error(), errorHTTPCode)
@@ -70,7 +74,7 @@ func shortenerHandler(res http.ResponseWriter, req *http.Request) {
 	}
 
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte("localhost:8080/" + shortcut))
+	res.Write([]byte("http://localhost:8080/" + shortcut))
 }
 
 func expanderHandler(res http.ResponseWriter, req *http.Request) {
