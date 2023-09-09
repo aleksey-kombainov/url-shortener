@@ -19,8 +19,8 @@ type urlManager struct {
 //	}
 //}
 
-func newURLManagerFromFullURL(fullUrl string) *urlManager {
-	u, err := url.Parse(fullUrl)
+func newURLManagerFromFullURL(fullURL string) *urlManager {
+	u, err := url.Parse(fullURL)
 	if err != nil {
 		panic(err)
 	}
