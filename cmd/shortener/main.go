@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/aleksey-kombainov/url-shortener.git/pkg/config"
 	"github.com/aleksey-kombainov/url-shortener.git/pkg/memstorage"
 	"github.com/aleksey-kombainov/url-shortener.git/pkg/random"
 	"github.com/go-chi/chi/v5"
@@ -27,6 +26,7 @@ type Storager interface {
 }
 
 var storage Storager = memstorage.NewStorage()
+var um = newURLManager("http", "localhost:8080", "/")
 
 func main() {
 	if err := run(); err != nil {
