@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/aleksey-kombainov/url-shortener.git/pkg/config"
 	"github.com/aleksey-kombainov/url-shortener.git/pkg/memstorage"
 	"github.com/aleksey-kombainov/url-shortener.git/pkg/random"
 	"github.com/go-chi/chi/v5"
@@ -26,7 +27,8 @@ type Storager interface {
 }
 
 var storage Storager = memstorage.NewStorage()
-var um = newURLManager("http", "localhost:8080", "/")
+var options = config.GetOptions()
+var um = newURLManager("http", options.BaseURL, "/", options.ServerListenAddr)
 
 func main() {
 	if err := run(); err != nil {
@@ -37,7 +39,7 @@ func main() {
 func run() error {
 	mux := getRouter()
 
-	return http.ListenAndServe(um.host, mux)
+	return http.ListenAndServe(options.ServerListenAddr, mux)
 }
 
 func getRouter() *chi.Mux {
