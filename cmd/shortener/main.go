@@ -27,17 +27,25 @@ type Storager interface {
 }
 
 var storage Storager = memstorage.NewStorage()
+var options config.Options
+var um *urlManager
 
 func main() {
+	initConfig()
 	if err := run(); err != nil {
 		panic(err)
 	}
 }
 
+func initConfig() {
+	options = config.GetOptions()
+	um = newURLManagerFromFullURL(options.BaseURL)
+}
+
 func run() error {
 	mux := getRouter()
 
-	return http.ListenAndServe(um.host, mux)
+	return http.ListenAndServe(options.ServerListenAddr, mux)
 }
 
 func getRouter() *chi.Mux {
