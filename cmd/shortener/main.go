@@ -28,7 +28,7 @@ type Storager interface {
 
 var storage Storager = memstorage.NewStorage()
 var options = config.GetOptions()
-var um = newURLManager("http", options.BaseURL, "/", options.ServerListenAddr)
+var um = newURLManager("http", options.BaseURL, "/")
 
 func main() {
 	if err := run(); err != nil {
