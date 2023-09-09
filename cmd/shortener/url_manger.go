@@ -1,6 +1,9 @@
 package main
 
-import "strings"
+import (
+	"net/url"
+	"strings"
+)
 
 type urlManager struct {
 	scheme  string
@@ -8,11 +11,27 @@ type urlManager struct {
 	baseURI string
 }
 
-func newURLManager(scheme string, baseURL string, baseURI string) *urlManager {
+//func newURLManager(scheme string, baseURL string, baseURI string) *urlManager {
+//	return &urlManager{
+//		scheme:  scheme,
+//		baseURL: baseURL,
+//		baseURI: baseURI,
+//	}
+//}
+
+func newURLManagerFromFullURL(fullUrl string) *urlManager {
+	u, err := url.Parse(fullUrl)
+	if err != nil {
+		panic(err)
+	}
+	path := u.Path
+	if path == "" {
+		path = "/"
+	}
 	return &urlManager{
-		scheme:  scheme,
-		baseURL: baseURL,
-		baseURI: baseURI,
+		scheme:  u.Scheme,
+		baseURL: u.Host,
+		baseURI: path,
 	}
 }
 

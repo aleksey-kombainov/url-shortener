@@ -27,13 +27,19 @@ type Storager interface {
 }
 
 var storage Storager = memstorage.NewStorage()
-var options = config.GetOptions()
-var um = newURLManager("http", options.BaseURL, "/")
+var options config.Options
+var um *urlManager
 
 func main() {
+	initConfig()
 	if err := run(); err != nil {
 		panic(err)
 	}
+}
+
+func initConfig() {
+	options = config.GetOptions()
+	um = newURLManagerFromFullURL(options.BaseURL)
 }
 
 func run() error {

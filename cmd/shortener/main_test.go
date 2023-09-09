@@ -29,7 +29,7 @@ var (
 )
 
 func TestShortenerOK(t *testing.T) {
-
+	initConfig()
 	for i, test := range testsShortener {
 		t.Run(`Shortener test #`+strconv.Itoa(i), func(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, um.baseURI, strings.NewReader(test.postData))
