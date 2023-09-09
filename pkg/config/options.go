@@ -12,7 +12,7 @@ type Options struct {
 
 var defaultOptions = Options{
 	ServerListenAddr: ":8080",
-	BaseURL:          "http://localhost:8000",
+	BaseURL:          "http://localhost:8080",
 }
 
 var envOptions = new(Options)
