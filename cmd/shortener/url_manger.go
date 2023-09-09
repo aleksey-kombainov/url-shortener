@@ -8,7 +8,7 @@ type urlManager struct {
 	baseURI string
 }
 
-func newUrlManager(scheme string, host string, baseURI string) *urlManager {
+func newURLManager(scheme string, host string, baseURI string) *urlManager {
 	return &urlManager{
 		scheme:  scheme,
 		host:    host,

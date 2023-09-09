@@ -25,7 +25,7 @@ type Storager interface {
 }
 
 var storage Storager = memstorage.NewStorage()
-var um *urlManager = newUrlManager("http", "localhost:8080", "/")
+var um *urlManager = newURLManager("http", "localhost:8080", "/")
 
 func main() {
 	if err := run(); err != nil {
