@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	routeURI                = `/`
 	errorHTTPCode           = http.StatusBadRequest
 	shortcutLength          = 8
 	generatorIterationLimit = 10000
@@ -27,6 +26,7 @@ type Storager interface {
 }
 
 var storage Storager = memstorage.NewStorage()
+var um *urlManager = newURLManager("http", "localhost:8080", "/")
 
 func main() {
 	if err := run(); err != nil {
@@ -37,7 +37,7 @@ func main() {
 func run() error {
 	mux := getRouter()
 
-	return http.ListenAndServe(`:8080`, mux)
+	return http.ListenAndServe(um.host, mux)
 }
 
 func getRouter() *chi.Mux {
@@ -60,10 +60,12 @@ func routerErrorHandler(res http.ResponseWriter, req *http.Request) {
 
 func shortenerHandler(res http.ResponseWriter, req *http.Request) {
 
-	if req.Header.Get(headers.ContentType) != mimetype.TextPlain {
-		http.Error(res, fmt.Sprintf("Content-type \"%s\" not allowed", req.Header.Get("Content-Type")), errorHTTPCode)
+	mtype := extractMIMETypeFromStr(req.Header.Get(headers.ContentType))
+	if mtype != mimetype.TextPlain {
+		http.Error(res, fmt.Sprintf("Content-type \"%s\" not allowed", mtype), errorHTTPCode)
 		return
 	}
+	defer req.Body.Close()
 	url, err := io.ReadAll(req.Body)
 	if err != nil {
 		http.Error(res, err.Error(), errorHTTPCode)
@@ -71,7 +73,7 @@ func shortenerHandler(res http.ResponseWriter, req *http.Request) {
 	}
 	urlStr := strings.TrimSpace(string(url)) // @todo валидация url
 	if urlStr == "" {
-		http.Error(res, "invalid url", errorHTTPCode)
+		http.Error(res, "empty url", errorHTTPCode)
 		return
 	}
 
@@ -82,11 +84,11 @@ func shortenerHandler(res http.ResponseWriter, req *http.Request) {
 	}
 	res.Header().Add(headers.ContentType, mimetype.TextPlain)
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte("localhost:8080/" + shortcut))
+	res.Write([]byte(um.buildFullURLByShortcut(shortcut)))
 }
 
 func expanderHandler(res http.ResponseWriter, req *http.Request) {
-	shortcut := strings.TrimPrefix(req.RequestURI, routeURI)
+	shortcut := um.getShortcutFromURI(req.RequestURI)
 	if len(shortcut) == 0 {
 		http.Error(res, "invalid shortcut", errorHTTPCode)
 		return
@@ -118,4 +120,9 @@ func getAndSaveUniqueShortcut(url string) (string, error) {
 	}
 	storage.Put(shortcut, url)
 	return shortcut, nil
+}
+
+func extractMIMETypeFromStr(str string) string {
+	mtypeSlice := strings.Split(str, ";")
+	return strings.TrimSpace(mtypeSlice[0])
 }

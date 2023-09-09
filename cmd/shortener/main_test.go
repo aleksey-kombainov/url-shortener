@@ -13,10 +13,6 @@ import (
 	"testing"
 )
 
-const (
-	baseUri = `/`
-)
-
 var (
 	testsShortener = []struct {
 		//name string too lazy
@@ -29,14 +25,14 @@ var (
 			postData: `http://ya.ru`,
 		},
 	}
+	shortcuts = make(map[string]string)
 )
 
 func TestShortenerOK(t *testing.T) {
-	shortcuts := make(map[string]string)
 
 	for i, test := range testsShortener {
 		t.Run(`Shortener test #`+strconv.Itoa(i), func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodPost, baseUri, strings.NewReader(test.postData))
+			request := httptest.NewRequest(http.MethodPost, um.baseURI, strings.NewReader(test.postData))
 			request.Header.Add(headers.ContentType, mimetype.TextPlain)
 
 			recorder := httptest.NewRecorder()
@@ -44,22 +40,25 @@ func TestShortenerOK(t *testing.T) {
 			res := recorder.Result()
 
 			assert.Equal(t, http.StatusCreated, res.StatusCode)
-			assert.Equal(t, mimetype.TextPlain, res.Header.Get(headers.ContentType))
+			assert.Equal(t, mimetype.TextPlain, extractMIMETypeFromStr(request.Header.Get(headers.ContentType)))
 
 			defer res.Body.Close()
 			resBody, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
 			assert.NotEmpty(t, string(resBody))
 
-			shortcuts[strings.TrimPrefix(string(resBody), "localhost:8080/")] = test.postData
+			shortcuts[um.getShortcutFromFullURL(string(resBody))] = test.postData
 		})
 	}
+	expanderOK(t)
+}
 
-	var i int = 0
+func expanderOK(t *testing.T) {
+	var i = 0
 	for shortcut, domain := range shortcuts {
 		t.Run(`Expander test #`+strconv.Itoa(i), func(t *testing.T) {
 
-			request := httptest.NewRequest(http.MethodGet, baseUri+shortcut, nil)
+			request := httptest.NewRequest(http.MethodGet, um.baseURI+shortcut, nil)
 
 			recorder := httptest.NewRecorder()
 			getRouter().ServeHTTP(recorder, request)
