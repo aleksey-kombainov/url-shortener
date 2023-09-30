@@ -41,10 +41,6 @@ func TestShortenerOK(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			getRouter().ServeHTTP(recorder, request)
 			res := recorder.Result()
-
-			assert.Equal(t, nethttp.StatusCreated, res.StatusCode)
-			assert.Equal(t, mimetype.TextPlain, http.ExtractMIMETypeFromStr(request.Header.Get(headers.ContentType)))
-
 			defer func() {
 				err := res.Body.Close()
 				if err != nil {
@@ -52,6 +48,10 @@ func TestShortenerOK(t *testing.T) {
 						Msg("Can not close response.Body(): " + err.Error())
 				}
 			}()
+
+			assert.Equal(t, nethttp.StatusCreated, res.StatusCode)
+			assert.Equal(t, mimetype.TextPlain, http.ExtractMIMETypeFromStr(request.Header.Get(headers.ContentType)))
+
 			resBody, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
 			assert.NotEmpty(t, string(resBody))
