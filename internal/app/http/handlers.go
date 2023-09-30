@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/config"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/logger"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/memstorage"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
@@ -27,7 +28,8 @@ func ShortenerHandler(res http.ResponseWriter, req *http.Request) {
 	}
 	defer func() {
 		if err := req.Body.Close(); err != nil {
-
+			logger.Logger.Error().
+				Msg("Can not close request.Body(): " + err.Error())
 		}
 	}()
 	url, err := io.ReadAll(req.Body)
@@ -48,7 +50,9 @@ func ShortenerHandler(res http.ResponseWriter, req *http.Request) {
 	}
 	res.Header().Add(headers.ContentType, mimetype.TextPlain)
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(NewURLManagerFromFullURL(config.GetOptions().BaseURL).BuildFullURLByShortcut(shortcut)))
+	if _, err := res.Write([]byte(NewURLManagerFromFullURL(config.GetOptions().BaseURL).BuildFullURLByShortcut(shortcut))); err != nil {
+
+	}
 }
 
 func ExpanderHandler(res http.ResponseWriter, req *http.Request) {

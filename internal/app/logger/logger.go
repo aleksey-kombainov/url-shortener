@@ -5,7 +5,8 @@ import (
 	"os"
 )
 
-func Init() zerolog.Logger {
-	logger := zerolog.New(os.Stdout).Level(zerolog.InfoLevel)
-	return logger
+var Logger zerolog.Logger
+
+func Init() {
+	Logger = zerolog.New(os.Stdout).Level(zerolog.InfoLevel)
 }

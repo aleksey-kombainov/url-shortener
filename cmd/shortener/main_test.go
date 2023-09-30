@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/config"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/http"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/logger"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
 	"github.com/stretchr/testify/assert"
@@ -44,7 +45,12 @@ func TestShortenerOK(t *testing.T) {
 			assert.Equal(t, nethttp.StatusCreated, res.StatusCode)
 			assert.Equal(t, mimetype.TextPlain, http.ExtractMIMETypeFromStr(request.Header.Get(headers.ContentType)))
 
-			defer res.Body.Close()
+			defer func() {
+				if err := res.Body.Close(); err != nil {
+					logger.Logger.Error().
+						Msg("Can not close response.Body(): " + err.Error())
+				}
+			}()
 			resBody, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
 			assert.NotEmpty(t, string(resBody))
@@ -68,7 +74,12 @@ func expanderOK(t *testing.T) {
 
 			assert.Equal(t, nethttp.StatusTemporaryRedirect, res.StatusCode)
 
-			defer res.Body.Close()
+			defer func() {
+				if err := res.Body.Close(); err != nil {
+					logger.Logger.Error().
+						Msg("Can not close request.Body(): " + err.Error())
+				}
+			}()
 			resBody, err := io.ReadAll(res.Body)
 
 			require.NoError(t, err)
@@ -114,7 +125,12 @@ func TestShortenerFailure(t *testing.T) {
 
 			assert.Equal(t, nethttp.StatusBadRequest, res.StatusCode)
 
-			defer res.Body.Close()
+			defer func() {
+				if err := res.Body.Close(); err != nil {
+					logger.Logger.Error().
+						Msg("Can not close request.Body(): " + err.Error())
+				}
+			}()
 
 			assert.NotEqual(t, mimetype.TextPlain, res.Header.Get(headers.ContentType))
 		})
