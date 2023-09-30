@@ -1,141 +1,37 @@
 package main
 
 import (
-	"errors"
-	"fmt"
-	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/config"
-	"github.com/aleksey-kombainov/url-shortener.git/internal/app/memstorage"
-	"github.com/aleksey-kombainov/url-shortener.git/internal/app/random"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/http"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-http-utils/headers"
-	"github.com/ldez/mimetype"
-	"io"
-	"net/http"
-	"strings"
+	nethttp "net/http"
 )
 
-const (
-	errorHTTPCode           = http.StatusBadRequest
-	shortcutLength          = 8
-	generatorIterationLimit = 10000
-)
-
-type Storager interface {
-	Put(key string, val string)
-	GetValueByKey(key string) (string, error)
-	GetKeyByValue(val string) (string, error)
-}
-
-var storage Storager = memstorage.NewStorage()
-var options config.Options
-var um *app.UrlManager
+var Options config.Options
 
 func main() {
-	initConfig()
+	Options = config.GetOptions()
 	if err := run(); err != nil {
 		panic(err)
 	}
 }
 
-func initConfig() {
-	options = config.GetOptions()
-	um = app.NewURLManagerFromFullURL(options.BaseURL)
-}
-
 func run() error {
 	mux := getRouter()
 
-	return http.ListenAndServe(options.ServerListenAddr, mux)
+	return nethttp.ListenAndServe(Options.ServerListenAddr, mux)
 }
 
 func getRouter() *chi.Mux {
 	mux := chi.NewRouter()
-	mux.Post("/", func(res http.ResponseWriter, req *http.Request) {
-		shortenerHandler(res, req)
+	mux.Post("/", func(res nethttp.ResponseWriter, req *nethttp.Request) {
+		http.ShortenerHandler(res, req)
 	})
-	mux.Get("/{shortcut}", func(res http.ResponseWriter, req *http.Request) {
-		expanderHandler(res, req)
+	mux.Get("/{shortcut}", func(res nethttp.ResponseWriter, req *nethttp.Request) {
+		http.ExpanderHandler(res, req)
 	})
-	mux.NotFound(routerErrorHandler)
-	mux.MethodNotAllowed(routerErrorHandler)
+	mux.NotFound(http.ErrorHandler)
+	mux.MethodNotAllowed(http.ErrorHandler)
 
 	return mux
-}
-
-func routerErrorHandler(res http.ResponseWriter, _ *http.Request) {
-	http.Error(res, "", errorHTTPCode)
-}
-
-func shortenerHandler(res http.ResponseWriter, req *http.Request) {
-
-	mtype := extractMIMETypeFromStr(req.Header.Get(headers.ContentType))
-	if mtype != mimetype.TextPlain {
-		http.Error(res, fmt.Sprintf("Content-type \"%s\" not allowed", mtype), errorHTTPCode)
-		return
-	}
-	defer func() {
-		if err := req.Body.Close(); err != nil {
-
-		}
-	}()
-	url, err := io.ReadAll(req.Body)
-	if err != nil {
-		http.Error(res, err.Error(), errorHTTPCode)
-		return
-	}
-	urlStr := strings.TrimSpace(string(url)) // @todo валидация url
-	if urlStr == "" {
-		http.Error(res, "empty url", errorHTTPCode)
-		return
-	}
-
-	shortcut, err := getAndSaveUniqueShortcut(urlStr)
-	if err != nil {
-		http.Error(res, err.Error(), errorHTTPCode)
-		return
-	}
-	res.Header().Add(headers.ContentType, mimetype.TextPlain)
-	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(um.BuildFullURLByShortcut(shortcut)))
-}
-
-func expanderHandler(res http.ResponseWriter, req *http.Request) {
-	shortcut := um.GetShortcutFromURI(req.RequestURI)
-	if len(shortcut) == 0 {
-		http.Error(res, "invalid shortcut", errorHTTPCode)
-		return
-	}
-	url, err := storage.GetValueByKey(shortcut)
-	if err != nil {
-		http.Error(res, "shortcut not found", errorHTTPCode)
-		return
-	}
-	res.Header().Add(headers.Location, url) // @todo проверить редирект на самого себя
-	res.WriteHeader(http.StatusTemporaryRedirect)
-}
-
-/*
-один урл генерирует разные шорткаты. из задания не понятно, верно ли такое поведение
-*/
-func getAndSaveUniqueShortcut(url string) (string, error) {
-	var shortcut string
-	isGenerated := false
-	for i := 0; i < generatorIterationLimit; i++ {
-		shortcut = random.GenString(shortcutLength)
-		if _, err := storage.GetValueByKey(shortcut); err != nil {
-			isGenerated = true
-			break
-		}
-	}
-	if !isGenerated {
-		return "", errors.New("generator limit exceeded")
-	}
-	storage.Put(shortcut, url)
-	return shortcut, nil
-}
-
-func extractMIMETypeFromStr(str string) string {
-	mtypeSlice := strings.Split(str, ";")
-	return strings.TrimSpace(mtypeSlice[0])
 }

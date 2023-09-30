@@ -2,6 +2,12 @@ package memstorage
 
 import "errors"
 
+type Storager interface {
+	Put(key string, val string)
+	GetValueByKey(key string) (string, error)
+	GetKeyByValue(val string) (string, error)
+}
+
 type Storage struct {
 	storage map[string]string
 }
