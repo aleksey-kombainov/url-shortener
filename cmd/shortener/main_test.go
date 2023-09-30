@@ -31,7 +31,7 @@ var (
 )
 
 func TestShortenerOK(t *testing.T) {
-	Options = config.GetOptions()
+	options = config.GetOptions()
 	for i, test := range testsShortener {
 		t.Run(`Shortener test #`+strconv.Itoa(i), func(t *testing.T) {
 			request := httptest.NewRequest(nethttp.MethodPost, http.NewURLManagerFromFullURL(config.GetOptions().BaseURL).BaseURI, strings.NewReader(test.postData))
