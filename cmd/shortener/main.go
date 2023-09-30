@@ -3,9 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/aleksey-kombainov/url-shortener.git/pkg/config"
-	"github.com/aleksey-kombainov/url-shortener.git/pkg/memstorage"
-	"github.com/aleksey-kombainov/url-shortener.git/pkg/random"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/config"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/memstorage"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/random"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
@@ -28,7 +29,7 @@ type Storager interface {
 
 var storage Storager = memstorage.NewStorage()
 var options config.Options
-var um *urlManager
+var um *app.UrlManager
 
 func main() {
 	initConfig()
@@ -39,7 +40,7 @@ func main() {
 
 func initConfig() {
 	options = config.GetOptions()
-	um = newURLManagerFromFullURL(options.BaseURL)
+	um = app.NewURLManagerFromFullURL(options.BaseURL)
 }
 
 func run() error {
@@ -62,7 +63,7 @@ func getRouter() *chi.Mux {
 	return mux
 }
 
-func routerErrorHandler(res http.ResponseWriter, req *http.Request) {
+func routerErrorHandler(res http.ResponseWriter, _ *http.Request) {
 	http.Error(res, "", errorHTTPCode)
 }
 
@@ -73,7 +74,11 @@ func shortenerHandler(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, fmt.Sprintf("Content-type \"%s\" not allowed", mtype), errorHTTPCode)
 		return
 	}
-	defer req.Body.Close()
+	defer func() {
+		if err := req.Body.Close(); err != nil {
+
+		}
+	}()
 	url, err := io.ReadAll(req.Body)
 	if err != nil {
 		http.Error(res, err.Error(), errorHTTPCode)
@@ -92,11 +97,11 @@ func shortenerHandler(res http.ResponseWriter, req *http.Request) {
 	}
 	res.Header().Add(headers.ContentType, mimetype.TextPlain)
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(um.buildFullURLByShortcut(shortcut)))
+	res.Write([]byte(um.BuildFullURLByShortcut(shortcut)))
 }
 
 func expanderHandler(res http.ResponseWriter, req *http.Request) {
-	shortcut := um.getShortcutFromURI(req.RequestURI)
+	shortcut := um.GetShortcutFromURI(req.RequestURI)
 	if len(shortcut) == 0 {
 		http.Error(res, "invalid shortcut", errorHTTPCode)
 		return
@@ -133,8 +138,4 @@ func getAndSaveUniqueShortcut(url string) (string, error) {
 func extractMIMETypeFromStr(str string) string {
 	mtypeSlice := strings.Split(str, ";")
 	return strings.TrimSpace(mtypeSlice[0])
-}
-
-func logger(err error) {
-	fmt.Println(err.Error())
 }

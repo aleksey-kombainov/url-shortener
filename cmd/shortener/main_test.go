@@ -32,7 +32,7 @@ func TestShortenerOK(t *testing.T) {
 	initConfig()
 	for i, test := range testsShortener {
 		t.Run(`Shortener test #`+strconv.Itoa(i), func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodPost, um.baseURI, strings.NewReader(test.postData))
+			request := httptest.NewRequest(http.MethodPost, um.BaseURI, strings.NewReader(test.postData))
 			request.Header.Add(headers.ContentType, mimetype.TextPlain)
 
 			recorder := httptest.NewRecorder()
@@ -47,7 +47,7 @@ func TestShortenerOK(t *testing.T) {
 			require.NoError(t, err)
 			assert.NotEmpty(t, string(resBody))
 
-			shortcuts[um.getShortcutFromFullURL(string(resBody))] = test.postData
+			shortcuts[um.GetShortcutFromFullURL(string(resBody))] = test.postData
 		})
 	}
 	expanderOK(t)
@@ -58,7 +58,7 @@ func expanderOK(t *testing.T) {
 	for shortcut, domain := range shortcuts {
 		t.Run(`Expander test #`+strconv.Itoa(i), func(t *testing.T) {
 
-			request := httptest.NewRequest(http.MethodGet, um.baseURI+shortcut, nil)
+			request := httptest.NewRequest(http.MethodGet, um.BaseURI+shortcut, nil)
 
 			recorder := httptest.NewRecorder()
 			getRouter().ServeHTTP(recorder, request)
