@@ -51,7 +51,8 @@ func ShortenerHandler(res http.ResponseWriter, req *http.Request) {
 	res.Header().Add(headers.ContentType, mimetype.TextPlain)
 	res.WriteHeader(http.StatusCreated)
 	if _, err := res.Write([]byte(NewURLManagerFromFullURL(config.GetOptions().BaseURL).BuildFullURLByShortcut(shortcut))); err != nil {
-
+		logger.Logger.Error().
+			Msg("Can not Write response: " + err.Error())
 	}
 }
 
