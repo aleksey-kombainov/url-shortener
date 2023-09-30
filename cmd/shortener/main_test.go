@@ -46,7 +46,8 @@ func TestShortenerOK(t *testing.T) {
 			assert.Equal(t, mimetype.TextPlain, http.ExtractMIMETypeFromStr(request.Header.Get(headers.ContentType)))
 
 			defer func() {
-				if err := res.Body.Close(); err != nil {
+				err := res.Body.Close()
+				if err != nil {
 					logger.Logger.Error().
 						Msg("Can not close response.Body(): " + err.Error())
 				}
@@ -75,7 +76,8 @@ func expanderOK(t *testing.T) {
 			assert.Equal(t, nethttp.StatusTemporaryRedirect, res.StatusCode)
 
 			defer func() {
-				if err := res.Body.Close(); err != nil {
+				err := res.Body.Close()
+				if err != nil {
 					logger.Logger.Error().
 						Msg("Can not close request.Body(): " + err.Error())
 				}
@@ -126,7 +128,8 @@ func TestShortenerFailure(t *testing.T) {
 			assert.Equal(t, nethttp.StatusBadRequest, res.StatusCode)
 
 			defer func() {
-				if err := res.Body.Close(); err != nil {
+				err := res.Body.Close()
+				if err != nil {
 					logger.Logger.Error().
 						Msg("Can not close request.Body(): " + err.Error())
 				}
