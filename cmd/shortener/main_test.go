@@ -41,13 +41,13 @@ func TestShortenerOK(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			getRouter().ServeHTTP(recorder, request)
 			res := recorder.Result()
-			defer func(response *nethttp.Response) {
-				err := response.Body.Close()
+			defer func() {
+				err := res.Body.Close()
 				if err != nil {
 					logger.Logger.Error().
 						Msg("Can not close response.Body(): " + err.Error())
 				}
-			}(res)
+			}()
 
 			assert.Equal(t, nethttp.StatusCreated, res.StatusCode)
 			assert.Equal(t, mimetype.TextPlain, http.ExtractMIMETypeFromStr(request.Header.Get(headers.ContentType)))
