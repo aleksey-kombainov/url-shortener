@@ -4,6 +4,7 @@ import (
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/config"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/http"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/logger"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/memstorage"
 	"github.com/go-chi/chi/v5"
 	nethttp "net/http"
 )
@@ -13,6 +14,7 @@ var options config.Options
 func main() {
 	options = config.GetOptions()
 	logger.Init()
+	memstorage.Init()
 
 	logger.Logger.Info().Msg("Starting server")
 
@@ -30,6 +32,7 @@ func run() error {
 func getRouter() *chi.Mux {
 	mux := chi.NewRouter()
 	mux.Post("/", http.RequestLoggerMiddleware(http.ShortenerHandler, &logger.Logger))
+	mux.Post("/api/shorten", http.RequestLoggerMiddleware(http.ShortenerApiHandler, &logger.Logger))
 	mux.Get("/{shortcut}", http.RequestLoggerMiddleware(http.ExpanderHandler, &logger.Logger))
 	mux.NotFound(http.ErrorHandler)
 	mux.MethodNotAllowed(http.ErrorHandler)

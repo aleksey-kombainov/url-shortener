@@ -2,6 +2,8 @@ package memstorage
 
 import "errors"
 
+var StorageInstance Storager
+
 type Storager interface {
 	Put(key string, val string)
 	GetValueByKey(key string) (string, error)
@@ -32,8 +34,14 @@ func (s Storage) GetKeyByValue(val string) (string, error) {
 	return "", errors.New("value not found")
 }
 
-func NewStorage() *Storage {
-	return &Storage{
+//func NewStorage() *Storage {
+//	return &Storage{
+//		storage: make(map[string]string),
+//	}
+//}
+
+func Init() {
+	StorageInstance = &Storage{
 		storage: make(map[string]string),
 	}
 }

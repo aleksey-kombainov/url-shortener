@@ -10,20 +10,13 @@ import (
 	"github.com/ldez/mimetype"
 	"io"
 	"net/http"
-	"strings"
 )
-
-const (
-	errorHTTPCode = http.StatusBadRequest
-)
-
-var storage memstorage.Storager = memstorage.NewStorage()
 
 func ShortenerHandler(res http.ResponseWriter, req *http.Request) {
 
-	mtype := ExtractMIMETypeFromStr(req.Header.Get(headers.ContentType))
-	if mtype != mimetype.TextPlain {
-		http.Error(res, fmt.Sprintf("Content-type \"%s\" not allowed", mtype), errorHTTPCode)
+	mimeType := ExtractMIMETypeFromStr(req.Header.Get(headers.ContentType))
+	if mimeType != mimetype.TextPlain {
+		httpError(res, fmt.Sprintf("Content-type \"%s\" not allowed", mimeType))
 		return
 	}
 	defer func() {
@@ -34,18 +27,12 @@ func ShortenerHandler(res http.ResponseWriter, req *http.Request) {
 	}()
 	url, err := io.ReadAll(req.Body)
 	if err != nil {
-		http.Error(res, err.Error(), errorHTTPCode)
+		httpError(res, err.Error())
 		return
 	}
-	urlStr := strings.TrimSpace(string(url)) // @todo валидация url
-	if urlStr == "" {
-		http.Error(res, "empty url", errorHTTPCode)
-		return
-	}
-
-	shortcut, err := app.GetAndSaveUniqueShortcut(urlStr, storage)
+	shortcut, err := app.MakeShortcut(string(url))
 	if err != nil {
-		http.Error(res, err.Error(), errorHTTPCode)
+		httpError(res, err.Error())
 		return
 	}
 	res.Header().Add(headers.ContentType, mimetype.TextPlain)
@@ -59,12 +46,12 @@ func ShortenerHandler(res http.ResponseWriter, req *http.Request) {
 func ExpanderHandler(res http.ResponseWriter, req *http.Request) {
 	shortcut := NewURLManagerFromFullURL(config.GetOptions().BaseURL).GetShortcutFromURI(req.RequestURI)
 	if len(shortcut) == 0 {
-		http.Error(res, "invalid shortcut", errorHTTPCode)
+		httpError(res, "invalid shortcut")
 		return
 	}
-	url, err := storage.GetValueByKey(shortcut)
+	url, err := memstorage.StorageInstance.GetValueByKey(shortcut)
 	if err != nil {
-		http.Error(res, "shortcut not found", errorHTTPCode)
+		httpError(res, "shortcut not found")
 		return
 	}
 	res.Header().Add(headers.Location, url) // @todo проверить редирект на самого себя
@@ -72,5 +59,5 @@ func ExpanderHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func ErrorHandler(res http.ResponseWriter, _ *http.Request) {
-	http.Error(res, "", errorHTTPCode)
+	httpError(res, "")
 }

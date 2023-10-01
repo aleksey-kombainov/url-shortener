@@ -11,12 +11,12 @@ const (
 	shortcutLength          = 8
 )
 
-func GetAndSaveUniqueShortcut(url string, storage memstorage.Storager) (string, error) {
+func GenerateAndSaveRandomShortcut() (string, error) {
 	var shortcut string
 	isGenerated := false
 	for i := 0; i < generatorIterationLimit; i++ {
 		shortcut = random.GenString(shortcutLength)
-		if _, err := storage.GetValueByKey(shortcut); err != nil {
+		if _, err := memstorage.StorageInstance.GetValueByKey(shortcut); err != nil {
 			isGenerated = true
 			break
 		}
@@ -24,6 +24,5 @@ func GetAndSaveUniqueShortcut(url string, storage memstorage.Storager) (string, 
 	if !isGenerated {
 		return "", errors.New("generator limit exceeded")
 	}
-	storage.Put(shortcut, url)
 	return shortcut, nil
 }

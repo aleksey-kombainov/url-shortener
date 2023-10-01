@@ -18,10 +18,10 @@ func RequestLoggerMiddleware(handler http.HandlerFunc, logger *zerolog.Logger) h
 
 		start := time.Now()
 		handler(rw, request)
-		execTime := time.Since(start).Microseconds()
+		execTimeMicroseconds := time.Since(start).Microseconds()
 
 		logger.Info().
-			Int64("executionTimeMicroseconds", execTime).
+			Int64("executionTimeMicroseconds", execTimeMicroseconds).
 			Int("responseLength", rw.length).
 			Int("responseCode", rw.statusCode).
 			Send()
