@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/config"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/http/api"
@@ -15,9 +14,8 @@ import (
 
 func ShortenerAPIHandler(res http.ResponseWriter, req *http.Request) {
 
-	mimeType := ExtractMIMETypeFromStr(req.Header.Get(headers.ContentType))
-	if mimeType != mimetype.ApplicationJSON {
-		httpError(res, fmt.Sprintf("Content-type \"%s\" not allowed", mimeType))
+	if !IsHeaderContainsMIMEType(req.Header.Values(headers.ContentType), mimetype.ApplicationJSON) {
+		httpError(res, "Content-type \"%s\" not allowed")
 		return
 	}
 	defer func() {

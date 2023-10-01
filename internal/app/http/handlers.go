@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/config"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/logger"
@@ -14,9 +13,8 @@ import (
 
 func ShortenerHandler(res http.ResponseWriter, req *http.Request) {
 
-	mimeType := ExtractMIMETypeFromStr(req.Header.Get(headers.ContentType))
-	if mimeType != mimetype.TextPlain {
-		httpError(res, fmt.Sprintf("Content-type \"%s\" not allowed", mimeType))
+	if !IsHeaderContainsMIMEType(req.Header.Values(headers.ContentType), mimetype.TextPlain) {
+		httpError(res, "Content-type not allowed")
 		return
 	}
 	defer func() {

@@ -10,9 +10,13 @@ const (
 	ErrorHTTPCode = http.StatusBadRequest
 )
 
-func ExtractMIMETypeFromStr(str string) string {
-	mtypeSlice := strings.Split(str, ";")
-	return strings.TrimSpace(mtypeSlice[0])
+func IsHeaderContainsMIMEType(headerValues []string, str string) bool {
+	for _, val := range headerValues {
+		if strings.Contains(val, str) {
+			return true
+		}
+	}
+	return false
 }
 
 func httpError(res http.ResponseWriter, errStr string) {

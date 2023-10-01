@@ -51,7 +51,7 @@ func TestShortenerOK(t *testing.T) {
 			}()
 
 			assert.Equal(t, nethttp.StatusCreated, res.StatusCode)
-			assert.Equal(t, mimetype.TextPlain, http.ExtractMIMETypeFromStr(request.Header.Get(headers.ContentType)))
+			assert.True(t, http.IsHeaderContainsMIMEType(res.Header.Values(headers.ContentType), mimetype.TextPlain))
 
 			resBody, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
