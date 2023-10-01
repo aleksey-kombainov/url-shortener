@@ -32,6 +32,7 @@ var (
 )
 
 func TestShortenerOK(t *testing.T) {
+	initGlobals()
 	options = config.GetOptions()
 	for i, test := range testsShortener {
 		t.Run(`Shortener test #`+strconv.Itoa(i), func(t *testing.T) {

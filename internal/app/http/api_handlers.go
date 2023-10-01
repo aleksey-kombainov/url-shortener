@@ -13,7 +13,7 @@ import (
 	"net/http"
 )
 
-func ShortenerApiHandler(res http.ResponseWriter, req *http.Request) {
+func ShortenerAPIHandler(res http.ResponseWriter, req *http.Request) {
 
 	mimeType := ExtractMIMETypeFromStr(req.Header.Get(headers.ContentType))
 	if mimeType != mimetype.ApplicationJSON {
@@ -39,7 +39,7 @@ func ShortenerApiHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	shortcut, err := app.MakeShortcut(shortenerRequest.Url)
+	shortcut, err := app.MakeShortcut(shortenerRequest.URL)
 	if err != nil {
 		httpError(res, err.Error())
 		return

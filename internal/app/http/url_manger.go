@@ -5,13 +5,13 @@ import (
 	"strings"
 )
 
-type UrlManager struct {
+type URLManager struct {
 	Scheme  string
 	BaseURL string
 	BaseURI string
 }
 
-func NewURLManagerFromFullURL(fullURL string) *UrlManager {
+func NewURLManagerFromFullURL(fullURL string) *URLManager {
 	u, err := url.Parse(fullURL)
 	if err != nil {
 		panic(err)
@@ -20,25 +20,25 @@ func NewURLManagerFromFullURL(fullURL string) *UrlManager {
 	if path == "" {
 		path = "/"
 	}
-	return &UrlManager{
+	return &URLManager{
 		Scheme:  u.Scheme,
 		BaseURL: u.Host,
 		BaseURI: path,
 	}
 }
 
-func (receiver UrlManager) BuildFullURLByShortcut(shortcut string) string {
+func (receiver URLManager) BuildFullURLByShortcut(shortcut string) string {
 	return receiver.getBaseURL() + shortcut
 }
 
-func (receiver UrlManager) GetShortcutFromFullURL(url string) string {
+func (receiver URLManager) GetShortcutFromFullURL(url string) string {
 	return strings.TrimPrefix(url, receiver.getBaseURL())
 }
 
-func (receiver UrlManager) GetShortcutFromURI(url string) string {
+func (receiver URLManager) GetShortcutFromURI(url string) string {
 	return strings.TrimPrefix(url, receiver.BaseURI)
 }
 
-func (receiver UrlManager) getBaseURL() string {
+func (receiver URLManager) getBaseURL() string {
 	return receiver.Scheme + "://" + receiver.BaseURL + receiver.BaseURI
 }

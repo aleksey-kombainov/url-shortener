@@ -12,15 +12,18 @@ import (
 var options config.Options
 
 func main() {
-	options = config.GetOptions()
-	logger.Init()
-	memstorage.Init()
-
+	initGlobals()
 	logger.Logger.Info().Msg("Starting server")
 
 	if err := run(); err != nil {
 		panic(err)
 	}
+}
+
+func initGlobals() {
+	options = config.GetOptions()
+	logger.Init()
+	memstorage.Init()
 }
 
 func run() error {
@@ -32,7 +35,7 @@ func run() error {
 func getRouter() *chi.Mux {
 	mux := chi.NewRouter()
 	mux.Post("/", http.RequestLoggerMiddleware(http.ShortenerHandler, &logger.Logger))
-	mux.Post("/api/shorten", http.RequestLoggerMiddleware(http.ShortenerApiHandler, &logger.Logger))
+	mux.Post("/api/shorten", http.RequestLoggerMiddleware(http.ShortenerAPIHandler, &logger.Logger))
 	mux.Get("/{shortcut}", http.RequestLoggerMiddleware(http.ExpanderHandler, &logger.Logger))
 	mux.NotFound(http.ErrorHandler)
 	mux.MethodNotAllowed(http.ErrorHandler)

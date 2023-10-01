@@ -11,7 +11,7 @@ func MakeShortcut(url string) (shortcut string, err error) {
 		return "", errors.New("url is empty")
 	}
 
-	shortcut, err = GenerateAndSaveRandomShortcut()
+	shortcut, err = GenerateAndSaveRandomShortcut(url)
 	if err != nil {
 		return "", err
 	}

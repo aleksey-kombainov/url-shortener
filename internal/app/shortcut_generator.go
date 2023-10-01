@@ -11,7 +11,7 @@ const (
 	shortcutLength          = 8
 )
 
-func GenerateAndSaveRandomShortcut() (string, error) {
+func GenerateAndSaveRandomShortcut(url string) (string, error) {
 	var shortcut string
 	isGenerated := false
 	for i := 0; i < generatorIterationLimit; i++ {
@@ -24,5 +24,8 @@ func GenerateAndSaveRandomShortcut() (string, error) {
 	if !isGenerated {
 		return "", errors.New("generator limit exceeded")
 	}
+
+	memstorage.StorageInstance.Put(shortcut, url)
+
 	return shortcut, nil
 }
