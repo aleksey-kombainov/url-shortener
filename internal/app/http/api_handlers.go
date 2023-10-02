@@ -33,7 +33,7 @@ func ShortenerAPIHandler(res http.ResponseWriter, req *http.Request) {
 	shortenerRequest := api.ShortenerRequest{}
 	err = json.Unmarshal(body, &shortenerRequest)
 	if err != nil {
-		httpError(res, "Unmarshalling error: "+err.Error())
+		httpError(res, "Unmarshalling error: "+err.Error()+"; Body: "+string(body))
 		return
 	}
 
