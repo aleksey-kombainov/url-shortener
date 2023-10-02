@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/config"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/http"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/http/api"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/logger"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
@@ -58,6 +61,42 @@ func TestShortenerOK(t *testing.T) {
 			assert.NotEmpty(t, string(resBody))
 
 			shortcuts[http.NewURLManagerFromFullURL(config.GetOptions().BaseURL).GetShortcutFromFullURL(string(resBody))] = test.postData
+		})
+	}
+	TestShortenerAPIOK(t)
+}
+
+func TestShortenerAPIOK(t *testing.T) {
+	options = config.GetOptions()
+	reqURL := http.NewURLManagerFromFullURL(config.GetOptions().BaseURL).BaseURI + "api/shorten"
+	for i, test := range testsShortener {
+		t.Run(`Shortener api test #`+strconv.Itoa(i), func(t *testing.T) {
+			reqStr, _ := json.Marshal(api.ShortenerRequest{test.postData})
+			request := httptest.NewRequest(nethttp.MethodPost, reqURL, bytes.NewReader(reqStr))
+			request.Header.Add(headers.ContentType, mimetype.ApplicationJSON)
+
+			recorder := httptest.NewRecorder()
+			getRouter().ServeHTTP(recorder, request)
+			res := recorder.Result()
+			defer func() {
+				err := res.Body.Close()
+				if err != nil {
+					logger.Logger.Error().
+						Msg("Can not close response.Body(): " + err.Error())
+				}
+			}()
+
+			assert.Equal(t, nethttp.StatusCreated, res.StatusCode)
+			assert.True(t, http.IsHeaderContainsMIMEType(res.Header.Values(headers.ContentType), mimetype.ApplicationJSON))
+
+			resBody, err := io.ReadAll(res.Body)
+			require.NoError(t, err)
+			assert.NotEmpty(t, string(resBody))
+
+			sresp := &api.ShortenerResponse{}
+			json.Unmarshal(resBody, sresp)
+			sc := http.NewURLManagerFromFullURL(config.GetOptions().BaseURL).GetShortcutFromFullURL(sresp.Result)
+			shortcuts[sc] = test.postData
 		})
 	}
 	expanderOK(t)
