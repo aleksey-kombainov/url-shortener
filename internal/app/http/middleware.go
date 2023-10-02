@@ -16,37 +16,25 @@ func RequestLoggerMiddleware(handler http.HandlerFunc, logger *zerolog.Logger) h
 
 	return http.HandlerFunc(func(respWriter http.ResponseWriter, request *http.Request) {
 
-		//responseContentTypeForEncoding := []string{mimetype.TextHTML, mimetype.ApplicationJSON}
-
-		var rw *responseWriter
 		// проверяем, что клиент умеет получать от сервера сжатые данные в формате gzip
 		acceptEncoding := request.Header.Get(headers.AcceptEncoding)
 		supportsGzip := strings.Contains(acceptEncoding, acceptableEncodingValue)
-
-		if supportsGzip {
-			// оборачиваем оригинальный http.ResponseWriter новым с поддержкой сжатия
-			cWriter := newCompressWriter(respWriter)
-			// не забываем отправить клиенту все сжатые данные после завершения middleware
-			defer cWriter.Close()
-
-			rw = newResponseWriter(cWriter)
-		} else {
-			rw = newResponseWriter(respWriter)
-		}
+		rw := newResponseWriter(respWriter, supportsGzip)
+		defer rw.Close()
 
 		// проверяем, что клиент отправил серверу сжатые данные в формате gzip
-		contentEncoding := request.Header.Get(headers.AcceptEncoding)
+		contentEncoding := request.Header.Get(headers.ContentEncoding)
 		sendsGzip := strings.Contains(contentEncoding, acceptableEncodingValue)
 		if sendsGzip {
 			// оборачиваем тело запроса в io.Reader с поддержкой декомпрессии
-			compressReader, err := newCompressReader(request.Body)
+			cr, err := newCompressReader(request.Body)
 			if err != nil {
 				rw.WriteHeader(http.StatusInternalServerError)
 				return
 			}
 			// меняем тело запроса на новое
-			request.Body = compressReader
-			defer compressReader.Close()
+			request.Body = cr
+			defer cr.Close()
 		}
 
 		logger.Info().

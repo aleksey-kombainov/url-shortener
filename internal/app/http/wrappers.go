@@ -2,75 +2,64 @@ package http
 
 import (
 	"compress/gzip"
+	"github.com/go-http-utils/headers"
+	"github.com/ldez/mimetype"
 	"io"
 	"net/http"
 )
 
 type responseWriter struct {
-	writer     http.ResponseWriter
-	length     int
-	statusCode int
+	writer                    http.ResponseWriter
+	gzWriter                  *gzip.Writer
+	length                    int
+	statusCode                int
+	clientSupportsCompression bool
+	useCompression            bool
 }
 
-func newResponseWriter(w http.ResponseWriter) *responseWriter {
+func newResponseWriter(w http.ResponseWriter, clientSupportsCompression bool) *responseWriter {
 	return &responseWriter{
-		writer:     w,
-		length:     0,
-		statusCode: 0,
+		writer:                    w,
+		gzWriter:                  gzip.NewWriter(w),
+		length:                    0,
+		statusCode:                0,
+		clientSupportsCompression: clientSupportsCompression,
+		useCompression:            false,
 	}
 }
 
 func (w *responseWriter) Write(b []byte) (n int, err error) {
-	n, err = w.writer.Write(b)
 
+	if w.clientSupportsCompression && 0 == w.length {
+		conType := w.writer.Header().Get(headers.ContentType)
+		if conType == mimetype.TextHTML || conType == mimetype.ApplicationJSON {
+			w.writer.Header().Set(headers.ContentEncoding, acceptableEncodingValue)
+			w.useCompression = true
+		}
+	}
+	if w.useCompression {
+		n, err = w.gzWriter.Write(b)
+	} else {
+		n, err = w.writer.Write(b)
+	}
 	w.length += n
-
 	return
-}
-
-func (w *responseWriter) WriteHeader(statusCode int) {
-	w.writer.WriteHeader(statusCode)
-	w.statusCode = statusCode
 }
 
 func (w *responseWriter) Header() http.Header {
 	return w.writer.Header()
 }
 
-//////////////////
-
-// compressWriter реализует интерфейс http.ResponseWriter и позволяет прозрачно для сервера
-// сжимать передаваемые данные и выставлять правильные HTTP-заголовки
-type compressWriter struct {
-	writer http.ResponseWriter
-	zw     *gzip.Writer
-}
-
-func newCompressWriter(w http.ResponseWriter) *compressWriter {
-	return &compressWriter{
-		writer: w,
-		zw:     gzip.NewWriter(w),
-	}
-}
-
-func (c *compressWriter) Header() http.Header {
-	return c.writer.Header()
-}
-
-func (c *compressWriter) Write(p []byte) (int, error) {
-	return c.zw.Write(p)
-}
-
-func (c *compressWriter) WriteHeader(statusCode int) {
-	if statusCode < 300 {
-		c.writer.Header().Set("Content-Encoding", "gzip")
-	}
-	c.writer.WriteHeader(statusCode)
+func (w *responseWriter) WriteHeader(statusCode int) {
+	w.writer.WriteHeader(statusCode)
 }
 
 // Close закрывает gzip.Writer и досылает все данные из буфера.
-func (c *compressWriter) Close() error {
-	return c.zw.Close()
+func (w *responseWriter) Close() error {
+	if w.useCompression {
+		return w.gzWriter.Close()
+	}
+	return nil
 }
 
 // compressReader реализует интерфейс io.ReadCloser и позволяет прозрачно для сервера
