@@ -52,6 +52,7 @@ func (w *responseWriter) Header() http.Header {
 
 func (w *responseWriter) WriteHeader(statusCode int) {
 	w.writer.WriteHeader(statusCode)
+	w.statusCode = statusCode
 }
 
 // Close закрывает gzip.Writer и досылает все данные из буфера.
