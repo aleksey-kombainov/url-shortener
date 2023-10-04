@@ -4,7 +4,7 @@ import (
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/config"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/http"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/logger"
-	"github.com/aleksey-kombainov/url-shortener.git/internal/app/memstorage"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/storage"
 	"github.com/go-chi/chi/v5"
 	nethttp "net/http"
 )
@@ -13,6 +13,7 @@ var options config.Options
 
 func main() {
 	initGlobals()
+	defer storage.ShortcutStorage.Close()
 	logger.Logger.Info().Msg("Starting server")
 
 	if err := run(); err != nil {
@@ -23,7 +24,7 @@ func main() {
 func initGlobals() {
 	options = config.GetOptions()
 	logger.Init()
-	memstorage.Init()
+	storage.ShortcutStorageFactoryInit(options, &logger.Logger)
 }
 
 func run() error {

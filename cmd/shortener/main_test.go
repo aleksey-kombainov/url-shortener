@@ -71,7 +71,7 @@ func TestShortenerAPIOK(t *testing.T) {
 	reqURL := http.NewURLManagerFromFullURL(config.GetOptions().BaseURL).BaseURI + "api/shorten"
 	for i, test := range testsShortener {
 		t.Run(`Shortener api test #`+strconv.Itoa(i), func(t *testing.T) {
-			reqStr, _ := json.Marshal(api.ShortenerRequest{test.postData})
+			reqStr, _ := json.Marshal(api.ShortenerRequest{URL: test.postData})
 			request := httptest.NewRequest(nethttp.MethodPost, reqURL, bytes.NewReader(reqStr))
 			request.Header.Add(headers.ContentType, mimetype.ApplicationJSON)
 

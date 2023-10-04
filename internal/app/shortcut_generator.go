@@ -2,8 +2,8 @@ package app
 
 import (
 	"errors"
-	"github.com/aleksey-kombainov/url-shortener.git/internal/app/memstorage"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/random"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/storage"
 )
 
 const (
@@ -16,7 +16,7 @@ func GenerateAndSaveRandomShortcut(url string) (string, error) {
 	isGenerated := false
 	for i := 0; i < generatorIterationLimit; i++ {
 		shortcut = random.GenString(shortcutLength)
-		if _, err := memstorage.StorageInstance.GetValueByKey(shortcut); err != nil {
+		if _, err := storage.ShortcutStorage.GetOriginalURLByShortcut(shortcut); err != nil {
 			isGenerated = true
 			break
 		}
@@ -25,7 +25,7 @@ func GenerateAndSaveRandomShortcut(url string) (string, error) {
 		return "", errors.New("generator limit exceeded")
 	}
 
-	memstorage.StorageInstance.Put(shortcut, url)
+	storage.ShortcutStorage.CreateRecord(url, shortcut)
 
 	return shortcut, nil
 }

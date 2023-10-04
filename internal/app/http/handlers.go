@@ -4,7 +4,7 @@ import (
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/config"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/logger"
-	"github.com/aleksey-kombainov/url-shortener.git/internal/app/memstorage"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/storage"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
 	"io"
@@ -47,7 +47,7 @@ func ExpanderHandler(res http.ResponseWriter, req *http.Request) {
 		httpError(res, "invalid shortcut")
 		return
 	}
-	url, err := memstorage.StorageInstance.GetValueByKey(shortcut)
+	url, err := storage.ShortcutStorage.GetOriginalURLByShortcut(shortcut)
 	if err != nil {
 		httpError(res, "shortcut not found")
 		return
