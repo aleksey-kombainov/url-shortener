@@ -2,7 +2,9 @@ package config
 
 import (
 	"flag"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/logger"
 	"github.com/caarlos0/env/v6"
+	"os"
 )
 
 type Options struct {
@@ -40,5 +42,8 @@ func GetOptions() Options {
 			options.FileStoragePath = envOptions.FileStoragePath
 		}
 	}
+	logger.Logger.Info().Msg("env" + envOptions.FileStoragePath)
+	logger.Logger.Info().Msg("sum" + options.FileStoragePath)
+	logger.Logger.Info().Msgf("all: %v", os.Environ())
 	return *options
 }

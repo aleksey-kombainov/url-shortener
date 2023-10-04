@@ -44,8 +44,7 @@ func RequestLoggerMiddleware(handler http.HandlerFunc, logger *zerolog.Logger) h
 
 		logger.Info().
 			Str("uri", request.RequestURI).
-			Str("method", request.Method).
-			Send()
+			Str("method", request.Method)
 
 		start := time.Now()
 		handler(rw, request)
@@ -54,7 +53,6 @@ func RequestLoggerMiddleware(handler http.HandlerFunc, logger *zerolog.Logger) h
 		logger.Info().
 			Int64("executionTimeMicroseconds", execTimeMicroseconds).
 			Int("responseLength", rw.length).
-			Int("responseCode", rw.statusCode).
-			Send()
+			Int("responseCode", rw.statusCode)
 	})
 }

@@ -76,6 +76,7 @@ func (s Storage) GetShortcutByOriginalURL(origURL string) (shortURL string, err 
 }
 
 func (s *Storage) Close() (err error) {
+	s.logger.Info().Msg("closing storage file")
 	if err = s.fileHdl.Close(); err != nil {
 		s.logger.Error().Msg("Cant close storage: " + err.Error())
 		return
@@ -101,4 +102,5 @@ func (s *Storage) loadData() {
 	if err := scanner.Err(); err != nil {
 		s.logger.Fatal().Msg("Error while scanning file: " + err.Error())
 	}
+	s.logger.Info().Msgf("Loaded %d records from storage", len(s.shortcutList))
 }
