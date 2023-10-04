@@ -6,7 +6,6 @@ import (
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/config"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/http"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/http/api"
-	"github.com/aleksey-kombainov/url-shortener.git/internal/app/logger"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
 	"github.com/stretchr/testify/assert"
@@ -45,13 +44,7 @@ func TestShortenerOK(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			getRouter().ServeHTTP(recorder, request)
 			res := recorder.Result()
-			defer func() {
-				err := res.Body.Close()
-				if err != nil {
-					logger.Logger.Error().
-						Msg("Can not close response.Body(): " + err.Error())
-				}
-			}()
+			defer res.Body.Close()
 
 			assert.Equal(t, nethttp.StatusCreated, res.StatusCode)
 			assert.True(t, http.IsHeaderContainsMIMETypes(res.Header.Values(headers.ContentType), []string{mimetype.TextPlain}))
@@ -78,13 +71,7 @@ func TestShortenerAPIOK(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			getRouter().ServeHTTP(recorder, request)
 			res := recorder.Result()
-			defer func() {
-				err := res.Body.Close()
-				if err != nil {
-					logger.Logger.Error().
-						Msg("Can not close response.Body(): " + err.Error())
-				}
-			}()
+			defer res.Body.Close()
 
 			assert.Equal(t, nethttp.StatusCreated, res.StatusCode)
 			assert.True(t, http.IsHeaderContainsMIMETypes(res.Header.Values(headers.ContentType), []string{mimetype.ApplicationJSON}))
@@ -112,16 +99,10 @@ func expanderOK(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			getRouter().ServeHTTP(recorder, request)
 			res := recorder.Result()
+			defer res.Body.Close()
 
 			assert.Equal(t, nethttp.StatusTemporaryRedirect, res.StatusCode)
 
-			defer func() {
-				err := res.Body.Close()
-				if err != nil {
-					logger.Logger.Error().
-						Msg("Can not close request.Body(): " + err.Error())
-				}
-			}()
 			resBody, err := io.ReadAll(res.Body)
 
 			require.NoError(t, err)
@@ -164,16 +145,9 @@ func TestShortenerFailure(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			getRouter().ServeHTTP(recorder, request)
 			res := recorder.Result()
+			defer res.Body.Close()
 
 			assert.Equal(t, nethttp.StatusBadRequest, res.StatusCode)
-
-			defer func() {
-				err := res.Body.Close()
-				if err != nil {
-					logger.Logger.Error().
-						Msg("Can not close request.Body(): " + err.Error())
-				}
-			}()
 
 			assert.NotEqual(t, mimetype.TextPlain, res.Header.Get(headers.ContentType))
 		})
