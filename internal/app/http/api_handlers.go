@@ -14,7 +14,7 @@ import (
 
 func ShortenerAPIHandler(res http.ResponseWriter, req *http.Request) {
 
-	if !IsHeaderContainsMIMEType(req.Header.Values(headers.ContentType), mimetype.ApplicationJSON) {
+	if vc := append(validEncodedContentTypesForShortener, mimetype.ApplicationJSON); !IsHeaderContainsMIMETypes(req.Header.Values(headers.ContentType), vc) {
 		httpError(res, "Content-type not allowed")
 		return
 	}

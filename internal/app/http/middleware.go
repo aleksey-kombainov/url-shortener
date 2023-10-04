@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/go-http-utils/headers"
+	"github.com/ldez/mimetype"
 	"github.com/rs/zerolog"
 	"net/http"
 	"strings"
@@ -11,6 +12,10 @@ import (
 const (
 	acceptableEncodingValue = "gzip"
 )
+
+var validEncodedContentTypesForShortener []string = []string{
+	mimetype.ApplicationGzip, "application/x-gzip",
+}
 
 func RequestLoggerMiddleware(handler http.HandlerFunc, logger *zerolog.Logger) http.HandlerFunc {
 

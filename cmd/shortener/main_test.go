@@ -54,7 +54,7 @@ func TestShortenerOK(t *testing.T) {
 			}()
 
 			assert.Equal(t, nethttp.StatusCreated, res.StatusCode)
-			assert.True(t, http.IsHeaderContainsMIMEType(res.Header.Values(headers.ContentType), mimetype.TextPlain))
+			assert.True(t, http.IsHeaderContainsMIMETypes(res.Header.Values(headers.ContentType), []string{mimetype.TextPlain}))
 
 			resBody, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
@@ -87,7 +87,7 @@ func TestShortenerAPIOK(t *testing.T) {
 			}()
 
 			assert.Equal(t, nethttp.StatusCreated, res.StatusCode)
-			assert.True(t, http.IsHeaderContainsMIMEType(res.Header.Values(headers.ContentType), mimetype.ApplicationJSON))
+			assert.True(t, http.IsHeaderContainsMIMETypes(res.Header.Values(headers.ContentType), []string{mimetype.ApplicationJSON}))
 
 			resBody, err := io.ReadAll(res.Body)
 			require.NoError(t, err)

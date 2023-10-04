@@ -6,10 +6,12 @@ import (
 	"strings"
 )
 
-func IsHeaderContainsMIMEType(headerValues []string, str string) bool {
-	for _, val := range headerValues {
-		if strings.Contains(val, str) {
-			return true
+func IsHeaderContainsMIMETypes(headerValues []string, searchValues []string) bool {
+	for _, headerVal := range headerValues {
+		for _, searchVal := range searchValues {
+			if strings.Contains(headerVal, searchVal) {
+				return true
+			}
 		}
 	}
 	return false
