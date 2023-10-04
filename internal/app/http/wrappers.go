@@ -30,13 +30,6 @@ func newResponseWriter(w http.ResponseWriter, clientSupportsCompression bool) *r
 
 func (w *responseWriter) Write(b []byte) (n int, err error) {
 
-	if w.clientSupportsCompression && w.length == 0 {
-		conType := w.writer.Header().Get(headers.ContentType)
-		if conType == mimetype.TextHTML || conType == mimetype.ApplicationJSON {
-			w.writer.Header().Set(headers.ContentEncoding, acceptableEncodingValue)
-			w.useCompression = true
-		}
-	}
 	if w.useCompression {
 		n, err = w.gzWriter.Write(b)
 	} else {
@@ -51,6 +44,13 @@ func (w *responseWriter) Header() http.Header {
 }
 
 func (w *responseWriter) WriteHeader(statusCode int) {
+	if w.clientSupportsCompression {
+		conType := w.writer.Header().Get(headers.ContentType)
+		if conType == mimetype.TextHTML || conType == mimetype.ApplicationJSON {
+			w.useCompression = true
+			w.writer.Header().Set(headers.ContentEncoding, acceptableEncodingValue)
+		}
+	}
 	w.writer.WriteHeader(statusCode)
 	w.statusCode = statusCode
 }

@@ -6,10 +6,6 @@ import (
 	"strings"
 )
 
-const (
-	ErrorHTTPCode = http.StatusBadRequest
-)
-
 func IsHeaderContainsMIMEType(headerValues []string, str string) bool {
 	for _, val := range headerValues {
 		if strings.Contains(val, str) {
@@ -22,5 +18,5 @@ func IsHeaderContainsMIMEType(headerValues []string, str string) bool {
 func httpError(res http.ResponseWriter, errStr string) {
 	logger.Logger.Error().
 		Msg("http error: " + errStr)
-	http.Error(res, errStr, ErrorHTTPCode)
+	http.Error(res, errStr, http.StatusBadRequest)
 }

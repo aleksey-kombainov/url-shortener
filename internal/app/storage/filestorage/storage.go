@@ -15,7 +15,7 @@ const (
 
 type Storage struct {
 	shortcutList []entities.Shortcut
-	maxId        uint64
+	maxID        uint64
 	fileHdl      *os.File
 	logger       *zerolog.Logger
 }
@@ -27,7 +27,7 @@ func New(fileStoragePath string, logger *zerolog.Logger) *Storage {
 	}
 	s := &Storage{
 		shortcutList: make([]entities.Shortcut, 0),
-		maxId:        0,
+		maxID:        0,
 		fileHdl:      fileHdl,
 		logger:       logger,
 	}
@@ -36,9 +36,9 @@ func New(fileStoragePath string, logger *zerolog.Logger) *Storage {
 }
 
 func (s *Storage) CreateRecord(origURL string, shortURL string) (err error) {
-	s.maxId++
+	s.maxID++
 	rec := entities.Shortcut{
-		Id:          s.maxId,
+		ID:          s.maxID,
 		ShortURL:    shortURL,
 		OriginalURL: origURL,
 	}
@@ -93,8 +93,8 @@ func (s *Storage) loadData() {
 		if err != nil {
 			s.logger.Fatal().Msg("unmarshall error while scanning file: " + err.Error())
 		}
-		if sc.Id > s.maxId {
-			s.maxId = sc.Id
+		if sc.ID > s.maxID {
+			s.maxID = sc.ID
 		}
 		s.shortcutList = append(s.shortcutList, sc)
 	}

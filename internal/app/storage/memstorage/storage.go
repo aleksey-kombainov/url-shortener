@@ -20,7 +20,7 @@ func New() *Storage {
 func (s *Storage) CreateRecord(origURL string, shortURL string) (err error) {
 	s.maxId++
 	rec := entities.Shortcut{
-		Id:          s.maxId,
+		ID:          s.maxId,
 		ShortURL:    shortURL,
 		OriginalURL: origURL,
 	}

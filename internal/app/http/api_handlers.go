@@ -26,7 +26,7 @@ func ShortenerAPIHandler(res http.ResponseWriter, req *http.Request) {
 	}()
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		httpError(res, err.Error())
+		httpError(res, "can not read req body: "+err.Error())
 		return
 	}
 
@@ -39,20 +39,20 @@ func ShortenerAPIHandler(res http.ResponseWriter, req *http.Request) {
 
 	shortcut, err := app.MakeShortcut(shortenerRequest.URL)
 	if err != nil {
-		httpError(res, err.Error())
+		httpError(res, "mk: "+err.Error())
 		return
 	}
 
 	url := NewURLManagerFromFullURL(config.GetOptions().BaseURL).BuildFullURLByShortcut(shortcut)
 	response, err := json.Marshal(api.ShortenerResponse{Result: url})
 	if err != nil {
-		httpError(res, err.Error())
+		httpError(res, "Marshalling error: "+err.Error())
 	}
 
 	res.Header().Add(headers.ContentType, mimetype.ApplicationJSON)
 	res.WriteHeader(http.StatusCreated)
 
 	if _, err := res.Write(response); err != nil {
-		httpError(res, err.Error())
+		httpError(res, "Writing response error: "+err.Error())
 	}
 }
