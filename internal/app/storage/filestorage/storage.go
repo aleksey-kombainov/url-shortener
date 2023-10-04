@@ -21,6 +21,7 @@ type Storage struct {
 }
 
 func New(fileStoragePath string, logger *zerolog.Logger) *Storage {
+	logger.Debug().Msgf("Opening '%s' storage", fileStoragePath)
 	fileHdl, err := os.OpenFile(fileStoragePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		logger.Fatal().Msg("Open file error. " + err.Error())

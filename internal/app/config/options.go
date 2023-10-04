@@ -4,7 +4,6 @@ import (
 	"flag"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/logger"
 	"github.com/caarlos0/env/v6"
-	"os"
 )
 
 type Options struct {
@@ -19,7 +18,6 @@ var defaultOptions = Options{
 	FileStoragePath:  "/tmp/short-url-db.json",
 }
 
-var envOptions = new(Options)
 var options = new(Options)
 
 func init() {
@@ -31,7 +29,8 @@ func init() {
 func GetOptions() Options {
 	flag.Parse()
 
-	if err := env.Parse(&envOptions); err != nil {
+	envOptions := Options{}
+	if err := env.Parse(&envOptions); err == nil {
 		if envOptions.ServerListenAddr != "" {
 			options.ServerListenAddr = envOptions.ServerListenAddr
 		}
@@ -41,9 +40,8 @@ func GetOptions() Options {
 		if envOptions.FileStoragePath != "" {
 			options.FileStoragePath = envOptions.FileStoragePath
 		}
+	} else {
+		logger.Logger.Error().Msg("Can't parse env vars: " + err.Error())
 	}
-	logger.Logger.Info().Msg("env" + envOptions.FileStoragePath)
-	logger.Logger.Info().Msg("sum" + options.FileStoragePath)
-	logger.Logger.Info().Msgf("all: %v", os.Environ())
 	return *options
 }

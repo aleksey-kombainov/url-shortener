@@ -24,6 +24,7 @@ func main() {
 func initGlobals() {
 	options = config.GetOptions()
 	logger.Init()
+	logger.Logger.Info().Msg("Shutting down")
 	storage.ShortcutStorageFactoryInit(options, &logger.Logger)
 }
 
