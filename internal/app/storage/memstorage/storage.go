@@ -7,20 +7,20 @@ import (
 
 type Storage struct {
 	shortcutList []entities.Shortcut
-	maxId        uint64
+	maxID        uint64
 }
 
 func New() *Storage {
 	return &Storage{
 		shortcutList: make([]entities.Shortcut, 0),
-		maxId:        0,
+		maxID:        0,
 	}
 }
 
 func (s *Storage) CreateRecord(origURL string, shortURL string) (err error) {
-	s.maxId++
+	s.maxID++
 	rec := entities.Shortcut{
-		ID:          s.maxId,
+		ID:          s.maxID,
 		ShortURL:    shortURL,
 		OriginalURL: origURL,
 	}
