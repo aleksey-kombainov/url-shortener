@@ -15,7 +15,7 @@ import (
 func ShortenerAPIHandler(res http.ResponseWriter, req *http.Request) {
 
 	if vc := append(validEncodedContentTypesForShortener, mimetype.ApplicationJSON); !IsHeaderContainsMIMETypes(req.Header.Values(headers.ContentType), vc) {
-		httpError(res, "Content-type not allowed")
+		httpError(res, "Content-type not allowed", 0)
 		return
 	}
 	defer func() {
@@ -26,33 +26,33 @@ func ShortenerAPIHandler(res http.ResponseWriter, req *http.Request) {
 	}()
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		httpError(res, "can not read req body: "+err.Error())
+		httpError(res, "can not read req body: "+err.Error(), 0)
 		return
 	}
 
 	shortenerRequest := api.ShortenerRequest{}
 	err = json.Unmarshal(body, &shortenerRequest)
 	if err != nil {
-		httpError(res, "Unmarshalling error: "+err.Error()+"; Body: "+string(body))
+		httpError(res, "Unmarshalling error: "+err.Error()+"; Body: "+string(body), 0)
 		return
 	}
 
 	shortcut, err := app.MakeShortcut(shortenerRequest.URL)
 	if err != nil {
-		httpError(res, "mk: "+err.Error())
+		httpError(res, "mk: "+err.Error(), 0)
 		return
 	}
 
 	url := NewURLManagerFromFullURL(config.GetOptions().BaseURL).BuildFullURLByShortcut(shortcut)
 	response, err := json.Marshal(api.ShortenerResponse{Result: url})
 	if err != nil {
-		httpError(res, "Marshalling error: "+err.Error())
+		httpError(res, "Marshalling error: "+err.Error(), 0)
 	}
 
 	res.Header().Add(headers.ContentType, mimetype.ApplicationJSON)
 	res.WriteHeader(http.StatusCreated)
 
 	if _, err := res.Write(response); err != nil {
-		httpError(res, "Writing response error: "+err.Error())
+		httpError(res, "Writing response error: "+err.Error(), 0)
 	}
 }

@@ -10,12 +10,14 @@ type Options struct {
 	ServerListenAddr string `env:"SERVER_ADDRESS"`
 	BaseURL          string `env:"BASE_URL"`
 	FileStoragePath  string `env:"FILE_STORAGE_PATH"`
+	DatabaseDsn      string `env:"DATABASE_DSN"`
 }
 
 var defaultOptions = Options{
 	ServerListenAddr: ":8080",
 	BaseURL:          "http://localhost:8080",
 	FileStoragePath:  "/tmp/short-url-db.json",
+	DatabaseDsn:      "",
 }
 
 var options = new(Options)
@@ -24,6 +26,7 @@ func init() {
 	flag.StringVar(&options.ServerListenAddr, "a", defaultOptions.ServerListenAddr, "server listen address")
 	flag.StringVar(&options.BaseURL, "b", defaultOptions.BaseURL, "url for shortcuts")
 	flag.StringVar(&options.FileStoragePath, "f", defaultOptions.FileStoragePath, "file storage path")
+	flag.StringVar(&options.DatabaseDsn, "d", defaultOptions.DatabaseDsn, "db dsn")
 }
 
 func GetOptions() Options {
@@ -39,6 +42,9 @@ func GetOptions() Options {
 		}
 		if envOptions.FileStoragePath != "" {
 			options.FileStoragePath = envOptions.FileStoragePath
+		}
+		if envOptions.DatabaseDsn != "" {
+			options.DatabaseDsn = envOptions.DatabaseDsn
 		}
 	} else {
 		logger.Logger.Error().Msg("Can't parse env vars: " + err.Error())

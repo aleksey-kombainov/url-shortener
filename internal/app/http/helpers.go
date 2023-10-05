@@ -17,8 +17,11 @@ func IsHeaderContainsMIMETypes(headerValues []string, searchValues []string) boo
 	return false
 }
 
-func httpError(res http.ResponseWriter, errStr string) {
+func httpError(res http.ResponseWriter, errStr string, errCode int) {
 	logger.Logger.Error().
 		Msg("http error: " + errStr)
-	http.Error(res, errStr, http.StatusBadRequest)
+	if errCode == 0 {
+		errCode = http.StatusBadRequest
+	}
+	http.Error(res, errStr, errCode)
 }
