@@ -42,7 +42,7 @@ func TestShortenerOK(t *testing.T) {
 			request.Header.Add(headers.ContentType, mimetype.TextPlain)
 
 			recorder := httptest.NewRecorder()
-			getRouter().ServeHTTP(recorder, request)
+			http.GetRouter().ServeHTTP(recorder, request)
 			res := recorder.Result()
 			defer res.Body.Close()
 
@@ -69,7 +69,7 @@ func TestShortenerAPIOK(t *testing.T) {
 			request.Header.Add(headers.ContentType, mimetype.ApplicationJSON)
 
 			recorder := httptest.NewRecorder()
-			getRouter().ServeHTTP(recorder, request)
+			http.GetRouter().ServeHTTP(recorder, request)
 			res := recorder.Result()
 			defer res.Body.Close()
 
@@ -97,7 +97,7 @@ func expanderOK(t *testing.T) {
 			request := httptest.NewRequest(nethttp.MethodGet, http.NewURLManagerFromFullURL(config.GetOptions().BaseURL).BaseURI+shortcut, nil)
 
 			recorder := httptest.NewRecorder()
-			getRouter().ServeHTTP(recorder, request)
+			http.GetRouter().ServeHTTP(recorder, request)
 			res := recorder.Result()
 			defer res.Body.Close()
 
@@ -143,7 +143,7 @@ func TestShortenerFailure(t *testing.T) {
 			request.Header.Add(headers.ContentType, test.contentType)
 
 			recorder := httptest.NewRecorder()
-			getRouter().ServeHTTP(recorder, request)
+			http.GetRouter().ServeHTTP(recorder, request)
 			res := recorder.Result()
 			defer res.Body.Close()
 
