@@ -23,7 +23,7 @@ func main() {
 		loggerInstance.Error().Msg("Can't parse env vars: " + err.Error())
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 
 	var storageInstance storage.ShortcutStorager

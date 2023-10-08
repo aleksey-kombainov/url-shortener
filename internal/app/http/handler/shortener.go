@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"errors"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/storage/storageerr"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
 	"github.com/rs/zerolog"
@@ -32,13 +34,16 @@ func (h ShortenerHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) 
 		h.httpError(res, err.Error())
 		return
 	}
+	httpStatus := http.StatusCreated
 	shortcut, err := h.shortcutService.MakeShortcut(strings.TrimSpace(string(url)))
-	if err != nil {
-		h.httpError(res, err.Error())
+	if errors.Is(err, storageerr.ErrNotUniqueOriginalURL) {
+		httpStatus = http.StatusConflict
+	} else if err != nil {
+		h.httpError(res, "MakeShortcut: "+err.Error())
 		return
 	}
 	res.Header().Add(headers.ContentType, mimetype.TextPlain)
-	res.WriteHeader(http.StatusCreated)
+	res.WriteHeader(httpStatus)
 	if _, err := res.Write([]byte(h.urlService.BuildFullURLByShortcut(shortcut))); err != nil {
 		h.logger.Error().
 			Msg("Can not Write response: " + err.Error())

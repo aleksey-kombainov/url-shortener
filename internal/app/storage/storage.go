@@ -15,10 +15,6 @@ const (
 	TypeMemory = "memory"
 )
 
-var (
-	EntityNotFoundErr = errors.New("Entity not found")
-)
-
 type ShortcutStorager interface {
 	CreateRecord(origURL string, shortURL string) (err error)
 	GetOriginalURLByShortcut(shortURL string) (origURL string, err error)
@@ -30,11 +26,11 @@ type ShortcutStorager interface {
 func ShortcutStorageFactory(ctx context.Context, logger *zerolog.Logger, storageType string, param string) (storage ShortcutStorager, err error) {
 	switch storageType {
 	case TypeDB:
-		storage, err = postgres.New(ctx, param, logger, EntityNotFoundErr)
+		storage, err = postgres.New(ctx, param, logger)
 	case TypeFile:
-		storage = filestorage.New(param, logger, EntityNotFoundErr)
+		storage = filestorage.New(param, logger)
 	case TypeMemory:
-		storage = memstorage.New(EntityNotFoundErr)
+		storage = memstorage.New()
 	default:
 		err = errors.New("unknown storage type")
 	}

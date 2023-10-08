@@ -7,16 +7,22 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func createScheme(ctx context.Context, conn pgx.Conn, logger zerolog.Logger) error {
+const (
+	tableName              = "shortcut"
+	shortcutIdxShortURL    = "shortcut__index_short_url"
+	shortcutIdxOriginalURL = "shortcut__index_short_url"
+)
+
+func createScheme(ctx context.Context, conn *pgx.Conn, logger *zerolog.Logger) error {
 	dqlQueries := []string{
-		`create table shortcut
-		(
-			id           bigint primary key generated always as identity,
-			short_url    char(8) not null,
-			original_url varchar(255) not null
-		)`,
-		"create index shortcut__index_short_url	on shortcut (short_url)",
-		"create index shortcut__index_original_url on shortcut (original_url)",
+		fmt.Sprintf(`create table %s
+			(
+				id           bigint primary key generated always as identity,
+				short_url    char(8) not null,
+				original_url varchar(255) not null
+			)`, tableName),
+		fmt.Sprintf("create unique index %s	on shortcut (short_url)", shortcutIdxShortURL),
+		fmt.Sprintf("create unique index %s on shortcut (original_url)", shortcutIdxOriginalURL),
 	}
 	tx, err := conn.Begin(ctx)
 	if err != nil {

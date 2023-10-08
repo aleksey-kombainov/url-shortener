@@ -2,8 +2,10 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/http/api"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/storage/storageerr"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
 	"github.com/rs/zerolog"
@@ -43,9 +45,12 @@ func (s ShortenerAPIHandler) ServeHTTP(res http.ResponseWriter, req *http.Reques
 		return
 	}
 
+	httpStatus := http.StatusCreated
 	shortcut, err := s.shortcutService.MakeShortcut(strings.TrimSpace(shortenerRequest.URL))
-	if err != nil {
-		s.httpError(res, "mk: "+err.Error())
+	if errors.Is(err, storageerr.ErrNotUniqueOriginalURL) {
+		httpStatus = http.StatusConflict
+	} else if err != nil {
+		s.httpError(res, "MakeShortcut: "+err.Error())
 		return
 	}
 
@@ -56,7 +61,7 @@ func (s ShortenerAPIHandler) ServeHTTP(res http.ResponseWriter, req *http.Reques
 	}
 
 	res.Header().Add(headers.ContentType, mimetype.ApplicationJSON)
-	res.WriteHeader(http.StatusCreated)
+	res.WriteHeader(httpStatus)
 
 	if _, err := res.Write(response); err != nil {
 		s.httpError(res, "Writing response error: "+err.Error())

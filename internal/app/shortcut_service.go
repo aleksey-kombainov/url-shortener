@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/random"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/storage"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/storage/storageerr"
 	"github.com/rs/zerolog"
 )
 
@@ -31,8 +32,12 @@ func (s ShortcutService) MakeShortcut(url string) (shortcut string, err error) {
 	isGenerated := false
 	for i := 0; i < generatorIterationLimit; i++ {
 		shortcut = random.GenString(shortcutLength)
-		_, err := (*s.Storage).GetOriginalURLByShortcut(shortcut)
-		if err != nil && errors.Is(err, storage.EntityNotFoundErr) { // err != nil - шорткат не найден
+
+		err := (*s.Storage).CreateRecord(url, shortcut)
+
+		if err != nil && errors.Is(err, storageerr.ErrNotUniqueShortcut) {
+			continue
+		} else if err != nil && errors.Is(err, storageerr.ErrEntityNotFound) { // err != nil - шорткат не найден
 			isGenerated = true
 			break
 		} else if err != nil {
@@ -43,7 +48,6 @@ func (s ShortcutService) MakeShortcut(url string) (shortcut string, err error) {
 	if !isGenerated {
 		return "", errors.New("generator limit exceeded")
 	}
-	err = (*s.Storage).CreateRecord(url, shortcut)
 	return
 }
 

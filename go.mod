@@ -31,3 +31,5 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 )
+
+require github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa // indirect

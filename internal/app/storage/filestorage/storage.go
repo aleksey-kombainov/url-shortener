@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/entities"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/storage/storageerr"
 	"github.com/rs/zerolog"
 	"os"
 )
@@ -14,25 +15,23 @@ const (
 )
 
 type Storage struct {
-	shortcutList      []entities.Shortcut
-	maxID             uint64
-	fileHdl           *os.File
-	logger            *zerolog.Logger
-	entityNotFoundErr error
+	shortcutList []entities.Shortcut
+	maxID        uint64
+	fileHdl      *os.File
+	logger       *zerolog.Logger
 }
 
-func New(fileStoragePath string, logger *zerolog.Logger, entityNotFoundErr error) *Storage {
+func New(fileStoragePath string, logger *zerolog.Logger) *Storage {
 	logger.Debug().Msgf("Opening '%s' storage", fileStoragePath)
 	fileHdl, err := os.OpenFile(fileStoragePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		logger.Fatal().Msg("Open file error. " + err.Error())
 	}
 	s := &Storage{
-		shortcutList:      make([]entities.Shortcut, 0),
-		maxID:             0,
-		fileHdl:           fileHdl,
-		logger:            logger,
-		entityNotFoundErr: entityNotFoundErr,
+		shortcutList: make([]entities.Shortcut, 0),
+		maxID:        0,
+		fileHdl:      fileHdl,
+		logger:       logger,
 	}
 	s.loadData()
 	return s
@@ -44,6 +43,11 @@ func (s *Storage) CreateRecord(origURL string, shortURL string) (err error) {
 		ID:          s.maxID,
 		ShortURL:    shortURL,
 		OriginalURL: origURL,
+	}
+	if _, err = s.GetOriginalURLByShortcut(shortURL); err == nil {
+		return storageerr.ErrNotUniqueShortcut
+	} else if _, err = s.GetShortcutByOriginalURL(origURL); err == nil {
+		return storageerr.ErrNotUniqueOriginalURL
 	}
 	dataStr, err := json.Marshal(rec)
 	if err != nil {
@@ -66,7 +70,7 @@ func (s Storage) GetOriginalURLByShortcut(shortURL string) (origURL string, err 
 			return sh.OriginalURL, nil
 		}
 	}
-	return "", s.entityNotFoundErr
+	return "", storageerr.ErrEntityNotFound
 }
 
 func (s Storage) GetShortcutByOriginalURL(origURL string) (shortURL string, err error) {
@@ -75,7 +79,7 @@ func (s Storage) GetShortcutByOriginalURL(origURL string) (shortURL string, err 
 			return sh.ShortURL, nil
 		}
 	}
-	return "", s.entityNotFoundErr
+	return "", storageerr.ErrEntityNotFound
 }
 
 func (s *Storage) Close() (err error) {
