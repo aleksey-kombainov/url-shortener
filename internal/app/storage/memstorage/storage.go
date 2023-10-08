@@ -1,19 +1,21 @@
 package memstorage
 
 import (
-	"errors"
+	"context"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/entities"
 )
 
 type Storage struct {
-	shortcutList []entities.Shortcut
-	maxID        uint64
+	shortcutList      []entities.Shortcut
+	maxID             uint64
+	entityNotFoundErr error
 }
 
-func New() *Storage {
+func New(entityNotFoundErr error) *Storage {
 	return &Storage{
-		shortcutList: make([]entities.Shortcut, 0),
-		maxID:        0,
+		shortcutList:      make([]entities.Shortcut, 0),
+		maxID:             0,
+		entityNotFoundErr: entityNotFoundErr,
 	}
 }
 
@@ -34,7 +36,7 @@ func (s Storage) GetOriginalURLByShortcut(shortURL string) (origURL string, err 
 			return sh.OriginalURL, nil
 		}
 	}
-	return "", errors.New("shortcut not found")
+	return "", s.entityNotFoundErr
 }
 
 func (s Storage) GetShortcutByOriginalURL(origURL string) (shortURL string, err error) {
@@ -43,9 +45,13 @@ func (s Storage) GetShortcutByOriginalURL(origURL string) (shortURL string, err 
 			return sh.ShortURL, nil
 		}
 	}
-	return "", errors.New("original url not found")
+	return "", s.entityNotFoundErr
 }
 
 func (*Storage) Close() (err error) {
+	return nil
+}
+
+func (s *Storage) Ping(ctx context.Context) (err error) {
 	return nil
 }

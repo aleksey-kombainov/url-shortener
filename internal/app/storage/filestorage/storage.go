@@ -2,8 +2,8 @@ package filestorage
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
-	"errors"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/entities"
 	"github.com/rs/zerolog"
 	"os"
@@ -14,23 +14,25 @@ const (
 )
 
 type Storage struct {
-	shortcutList []entities.Shortcut
-	maxID        uint64
-	fileHdl      *os.File
-	logger       *zerolog.Logger
+	shortcutList      []entities.Shortcut
+	maxID             uint64
+	fileHdl           *os.File
+	logger            *zerolog.Logger
+	entityNotFoundErr error
 }
 
-func New(fileStoragePath string, logger *zerolog.Logger) *Storage {
+func New(fileStoragePath string, logger *zerolog.Logger, entityNotFoundErr error) *Storage {
 	logger.Debug().Msgf("Opening '%s' storage", fileStoragePath)
 	fileHdl, err := os.OpenFile(fileStoragePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		logger.Fatal().Msg("Open file error. " + err.Error())
 	}
 	s := &Storage{
-		shortcutList: make([]entities.Shortcut, 0),
-		maxID:        0,
-		fileHdl:      fileHdl,
-		logger:       logger,
+		shortcutList:      make([]entities.Shortcut, 0),
+		maxID:             0,
+		fileHdl:           fileHdl,
+		logger:            logger,
+		entityNotFoundErr: entityNotFoundErr,
 	}
 	s.loadData()
 	return s
@@ -64,7 +66,7 @@ func (s Storage) GetOriginalURLByShortcut(shortURL string) (origURL string, err 
 			return sh.OriginalURL, nil
 		}
 	}
-	return "", errors.New("shortcut not found")
+	return "", s.entityNotFoundErr
 }
 
 func (s Storage) GetShortcutByOriginalURL(origURL string) (shortURL string, err error) {
@@ -73,7 +75,7 @@ func (s Storage) GetShortcutByOriginalURL(origURL string) (shortURL string, err 
 			return sh.ShortURL, nil
 		}
 	}
-	return "", errors.New("original url not found")
+	return "", s.entityNotFoundErr
 }
 
 func (s *Storage) Close() (err error) {
@@ -82,6 +84,10 @@ func (s *Storage) Close() (err error) {
 		s.logger.Error().Msg("Cant close storage: " + err.Error())
 		return
 	}
+	return nil
+}
+
+func (s Storage) Ping(ctx context.Context) (err error) {
 	return nil
 }
 

@@ -1,44 +1,44 @@
-package http
+package app
 
 import (
 	"net/url"
 	"strings"
 )
 
-type URLManager struct {
+type URLManagerService struct {
 	Scheme  string
 	BaseURL string
 	BaseURI string
 }
 
-func NewURLManagerFromFullURL(fullURL string) *URLManager {
+func NewURLManagerServiceFromFullURL(fullURL string) (*URLManagerService, error) {
 	u, err := url.Parse(fullURL)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	path := u.Path
 	if path == "" {
 		path = "/"
 	}
-	return &URLManager{
+	return &URLManagerService{
 		Scheme:  u.Scheme,
 		BaseURL: u.Host,
 		BaseURI: path,
-	}
+	}, nil
 }
 
-func (receiver URLManager) BuildFullURLByShortcut(shortcut string) string {
+func (receiver URLManagerService) BuildFullURLByShortcut(shortcut string) string {
 	return receiver.getBaseURL() + shortcut
 }
 
-func (receiver URLManager) GetShortcutFromFullURL(url string) string {
+func (receiver URLManagerService) GetShortcutFromFullURL(url string) string {
 	return strings.TrimPrefix(url, receiver.getBaseURL())
 }
 
-func (receiver URLManager) GetShortcutFromURI(url string) string {
+func (receiver URLManagerService) GetShortcutFromURI(url string) string {
 	return strings.TrimPrefix(url, receiver.BaseURI)
 }
 
-func (receiver URLManager) getBaseURL() string {
+func (receiver URLManagerService) getBaseURL() string {
 	return receiver.Scheme + "://" + receiver.BaseURL + receiver.BaseURI
 }

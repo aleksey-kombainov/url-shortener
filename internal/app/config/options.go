@@ -2,8 +2,8 @@ package config
 
 import (
 	"flag"
-	"github.com/aleksey-kombainov/url-shortener.git/internal/app/logger"
 	"github.com/caarlos0/env/v6"
+	"github.com/rs/zerolog"
 )
 
 type Options struct {
@@ -17,37 +17,32 @@ var defaultOptions = Options{
 	ServerListenAddr: ":8080",
 	BaseURL:          "http://localhost:8080",
 	FileStoragePath:  "/tmp/short-url-db.json",
-	DatabaseDsn:      "",
+	DatabaseDsn:      "postgres://shortener_user:12345@localhost:5432/shortener",
 }
 
-var options = new(Options)
-
-func init() {
-	flag.StringVar(&options.ServerListenAddr, "a", defaultOptions.ServerListenAddr, "server listen address")
-	flag.StringVar(&options.BaseURL, "b", defaultOptions.BaseURL, "url for shortcuts")
-	flag.StringVar(&options.FileStoragePath, "f", defaultOptions.FileStoragePath, "file storage path")
-	flag.StringVar(&options.DatabaseDsn, "d", defaultOptions.DatabaseDsn, "db dsn")
-}
-
-func GetOptions() Options {
+func GetOptions(logger zerolog.Logger) (opts Options) {
+	flag.StringVar(&opts.ServerListenAddr, "a", defaultOptions.ServerListenAddr, "server listen address")
+	flag.StringVar(&opts.BaseURL, "b", defaultOptions.BaseURL, "url for shortcuts")
+	flag.StringVar(&opts.FileStoragePath, "f", defaultOptions.FileStoragePath, "file storage path")
+	flag.StringVar(&opts.DatabaseDsn, "d", defaultOptions.DatabaseDsn, "db dsn")
 	flag.Parse()
 
 	envOptions := Options{}
 	if err := env.Parse(&envOptions); err == nil {
 		if envOptions.ServerListenAddr != "" {
-			options.ServerListenAddr = envOptions.ServerListenAddr
+			opts.ServerListenAddr = envOptions.ServerListenAddr
 		}
 		if envOptions.BaseURL != "" {
-			options.BaseURL = envOptions.BaseURL
+			opts.BaseURL = envOptions.BaseURL
 		}
 		if envOptions.FileStoragePath != "" {
-			options.FileStoragePath = envOptions.FileStoragePath
+			opts.FileStoragePath = envOptions.FileStoragePath
 		}
 		if envOptions.DatabaseDsn != "" {
-			options.DatabaseDsn = envOptions.DatabaseDsn
+			opts.DatabaseDsn = envOptions.DatabaseDsn
 		}
 	} else {
-		logger.Logger.Error().Msg("Can't parse env vars: " + err.Error())
+		logger.Error().Msg("Can't parse env vars: " + err.Error())
 	}
-	return *options
+	return opts
 }
