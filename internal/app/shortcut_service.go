@@ -33,6 +33,13 @@ func NewShortcutService(logger *zerolog.Logger, storage interfaces.ShortcutStora
 
 func (s ShortcutService) MakeShortcut(url string) (shortcut string, err error) {
 	shortcut, err = s.generateAndSaveShortcut(url, (*s.Storage).CreateRecord)
+	if errors.Is(err, storageerr.ErrNotUniqueOriginalURL) {
+		gotShortcut, errGettingShortcut := (*s.Storage).GetShortcutByOriginalURL(context.TODO(), url)
+		if errGettingShortcut != nil {
+			return "", errGettingShortcut
+		}
+		return gotShortcut, err
+	}
 	return
 }
 
