@@ -5,6 +5,7 @@ import (
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/config"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/http"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/interfaces"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/logger"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/storage"
 	"github.com/rs/zerolog"
@@ -26,7 +27,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 
-	var storageInstance storage.ShortcutStorager
+	var storageInstance interfaces.ShortcutStorager
 	if options.DatabaseDsn != "" {
 		storageInstance, err = storage.ShortcutStorageFactory(ctx, &loggerInstance, storage.TypeDB, options.DatabaseDsn)
 	} else if options.FileStoragePath != "" {
@@ -39,7 +40,7 @@ func main() {
 		shutdown(&loggerInstance)
 	} else {
 		defer func() {
-			if err := storageInstance.Close(); err != nil {
+			if err := storageInstance.Close(context.TODO()); err != nil {
 				loggerInstance.Error().Msgf("can't close storage: %w")
 			}
 		}()
@@ -47,7 +48,7 @@ func main() {
 
 	loggerInstance.Info().Msg("Starting server")
 
-	shortcutService := app.NewShortcutService(&loggerInstance, &storageInstance)
+	shortcutService := app.NewShortcutService(&loggerInstance, storageInstance)
 	urlManagerService, err := app.NewURLManagerServiceFromFullURL(options.BaseURL)
 	if err != nil {
 		loggerInstance.Error().Msgf("cant instantiate NewURLManagerServiceFromFullURL: %w", err)

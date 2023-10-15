@@ -32,4 +32,7 @@ require (
 	golang.org/x/sync v0.1.0 // indirect
 )
 
-require github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa // indirect
+require (
+	github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+)

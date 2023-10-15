@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/entities"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/interfaces"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/storage/storageerr"
 	"github.com/rs/zerolog"
 	"os"
@@ -37,16 +38,20 @@ func New(fileStoragePath string, logger *zerolog.Logger) *Storage {
 	return s
 }
 
-func (s *Storage) CreateRecord(origURL string, shortURL string) (err error) {
+func (s Storage) NewBatcher(ctx context.Context) (*Storage, error) {
+	return &s, nil
+}
+
+func (s *Storage) CreateRecord(ctx context.Context, origURL string, shortURL string) (err error) {
 	s.maxID++
 	rec := entities.Shortcut{
 		ID:          s.maxID,
 		ShortURL:    shortURL,
 		OriginalURL: origURL,
 	}
-	if _, err = s.GetOriginalURLByShortcut(shortURL); err == nil {
+	if _, err = s.GetOriginalURLByShortcut(ctx, shortURL); err == nil {
 		return storageerr.ErrNotUniqueShortcut
-	} else if _, err = s.GetShortcutByOriginalURL(origURL); err == nil {
+	} else if _, err = s.GetShortcutByOriginalURL(ctx, origURL); err == nil {
 		return storageerr.ErrNotUniqueOriginalURL
 	}
 	dataStr, err := json.Marshal(rec)
@@ -64,7 +69,7 @@ func (s *Storage) CreateRecord(origURL string, shortURL string) (err error) {
 	return nil
 }
 
-func (s Storage) GetOriginalURLByShortcut(shortURL string) (origURL string, err error) {
+func (s Storage) GetOriginalURLByShortcut(ctx context.Context, shortURL string) (origURL string, err error) {
 	for _, sh := range s.shortcutList {
 		if sh.ShortURL == shortURL {
 			return sh.OriginalURL, nil
@@ -73,7 +78,7 @@ func (s Storage) GetOriginalURLByShortcut(shortURL string) (origURL string, err 
 	return "", storageerr.ErrEntityNotFound
 }
 
-func (s Storage) GetShortcutByOriginalURL(origURL string) (shortURL string, err error) {
+func (s Storage) GetShortcutByOriginalURL(tx context.Context, origURL string) (shortURL string, err error) {
 	for _, sh := range s.shortcutList {
 		if sh.OriginalURL == origURL {
 			return sh.ShortURL, nil
@@ -82,7 +87,7 @@ func (s Storage) GetShortcutByOriginalURL(origURL string) (shortURL string, err 
 	return "", storageerr.ErrEntityNotFound
 }
 
-func (s *Storage) Close() (err error) {
+func (s *Storage) Close(tx context.Context) (err error) {
 	s.logger.Info().Msg("closing storage file")
 	if err = s.fileHdl.Close(); err != nil {
 		s.logger.Error().Msg("Cant close storage: " + err.Error())
@@ -114,4 +119,24 @@ func (s *Storage) loadData() {
 		s.logger.Fatal().Msg("Error while scanning file: " + err.Error())
 	}
 	s.logger.Info().Msgf("Loaded %d records from storage", len(s.shortcutList))
+}
+
+func (s Storage) NewBatch(ctx context.Context) (interfaces.ShortcutStorager, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s Storage) CreateRecordBatch(ctx context.Context, origURL string, shortURL string) (err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s Storage) CommitBatch(ctx context.Context) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s Storage) RollbackBatch(ctx context.Context) error {
+	//TODO implement me
+	panic("implement me")
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func NewConnection(ctx context.Context, dsn string) (conn *pgx.Conn, err error) {
+func newConnection(ctx context.Context, dsn string) (conn *pgx.Conn, err error) {
 	conn, err = pgx.Connect(ctx, dsn)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to database: %w", err)

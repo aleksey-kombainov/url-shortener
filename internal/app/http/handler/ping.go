@@ -2,7 +2,7 @@ package handler
 
 import (
 	"context"
-	"github.com/aleksey-kombainov/url-shortener.git/internal/app/storage"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/interfaces"
 	"github.com/rs/zerolog"
 	"net/http"
 	"time"
@@ -10,11 +10,11 @@ import (
 
 type PingHandler struct {
 	logger  *zerolog.Logger
-	storage *storage.ShortcutStorager
+	storage *interfaces.ShortcutStorager
 }
 
-func NewPingHandler(logger *zerolog.Logger, storage *storage.ShortcutStorager) *PingHandler {
-	return &PingHandler{logger: logger, storage: storage}
+func NewPingHandler(logger *zerolog.Logger, storage interfaces.ShortcutStorager) *PingHandler {
+	return &PingHandler{logger: logger, storage: &storage}
 }
 
 func (h PingHandler) ServeHTTP(res http.ResponseWriter, _ *http.Request) {

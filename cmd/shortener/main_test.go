@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/config"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/http"
-	"github.com/aleksey-kombainov/url-shortener.git/internal/app/http/api"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/model"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
 	"github.com/stretchr/testify/assert"
@@ -61,10 +61,10 @@ func TestShortenerOK(t *testing.T) {
 
 func TestShortenerAPIOK(t *testing.T) {
 	options = config.GetOptions()
-	reqURL := http.NewURLManagerFromFullURL(config.GetOptions().BaseURL).BaseURI + "api/shorten"
+	reqURL := http.NewURLManagerFromFullURL(config.GetOptions().BaseURL).BaseURI + "model/shorten"
 	for i, test := range testsShortener {
-		t.Run(`Shortener api test #`+strconv.Itoa(i), func(t *testing.T) {
-			reqStr, _ := json.Marshal(api.ShortenerRequest{URL: test.postData})
+		t.Run(`Shortener model test #`+strconv.Itoa(i), func(t *testing.T) {
+			reqStr, _ := json.Marshal(model.ShortenerRequest{URL: test.postData})
 			request := httptest.NewRequest(nethttp.MethodPost, reqURL, bytes.NewReader(reqStr))
 			request.Header.Add(headers.ContentType, mimetype.ApplicationJSON)
 
@@ -80,7 +80,7 @@ func TestShortenerAPIOK(t *testing.T) {
 			require.NoError(t, err)
 			assert.NotEmpty(t, string(resBody))
 
-			sresp := &api.ShortenerResponse{}
+			sresp := &model.ShortenerResponse{}
 			json.Unmarshal(resBody, sresp)
 			sc := http.NewURLManagerFromFullURL(config.GetOptions().BaseURL).GetShortcutFromFullURL(sresp.Result)
 			shortcuts[sc] = test.postData
