@@ -20,9 +20,6 @@ func main() {
 	loggerInstance := logger.GetLogger()
 
 	options := config.GetOptions(loggerInstance)
-	if err != nil {
-		loggerInstance.Error().Msg("Can't parse env vars: " + err.Error())
-	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
