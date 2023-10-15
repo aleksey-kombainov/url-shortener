@@ -3,7 +3,7 @@ package storageerr
 import "errors"
 
 var (
-	ErrEntityNotFound       = errors.New("Entity not found")
+	ErrEntityNotFound       = errors.New("entity not found")
 	ErrNotUniqueShortcut    = errors.New("shortcut is not unique")
-	ErrNotUniqueOriginalURL = errors.New("OriginalURL is not unique")
+	ErrNotUniqueOriginalURL = errors.New("originalURL is not unique")
 )

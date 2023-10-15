@@ -49,11 +49,11 @@ func (s ShortcutService) generateAndSaveShortcut(url string, saveMethod storageS
 		if err == nil {
 			isGenerated = true
 			break
-		} else if err != nil && errors.Is(err, storageerr.ErrNotUniqueShortcut) {
+		} else if errors.Is(err, storageerr.ErrNotUniqueShortcut) {
 			continue
 		} else {
-			s.logger.Error().Msgf("creating shortcut - error while creating shortcut: %w", err)
-			return "", err
+			//s.logger.Error().Msgf("creating shortcut - error while creating shortcut: %w", err)
+			return "", fmt.Errorf("creating shortcut - error while creating shortcut: %w", err)
 		}
 	}
 	if !isGenerated {
@@ -69,7 +69,7 @@ func (s ShortcutService) MakeShortcutBatch(ctx context.Context, batch []model.Sh
 	}
 	defer func() {
 		if err := batchStorage.Close(ctx); err != nil {
-			s.logger.Error().Msgf("can't close storage connection: %w", err)
+			s.logger.Error().Msgf("can't close storage connection: %s", err)
 		}
 	}()
 	for _, batchRecord := range batch {

@@ -21,6 +21,9 @@ func newConnection(ctx context.Context, dsn string) (conn *pgx.Conn, err error) 
 
 func checkDBSetup(ctx context.Context, conn *pgx.Conn, logger *zerolog.Logger) (err error) {
 	exists, err := tableExists(ctx, conn, "shortcut")
+	if err != nil {
+		return
+	}
 	if exists {
 		return nil
 	}

@@ -110,7 +110,6 @@ func processInsertStmtError(err error) error {
 	} else {
 		return fmt.Errorf("can't write record to db for storage: %w", err)
 	}
-	return err
 }
 
 func (s Storage) GetOriginalURLByShortcut(ctx context.Context, shortURL string) (origURL string, err error) {
