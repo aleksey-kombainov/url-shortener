@@ -27,9 +27,9 @@ func GetRouter(logger *zerolog.Logger, shortcutService *app.ShortcutService, url
 		r.Post("/shorten/batch", handler.NewShortenerBatchAPIHandler(logger, shortcutService, urlService).ServeHTTP)
 	})
 
-	errHandler := handler.NewErrorHandler(logger).ServeHTTP
-	mux.NotFound(errHandler)
-	mux.MethodNotAllowed(errHandler)
+	//errHandler := handler.NewErrorHandler(logger).ServeHTTP
+	//mux.NotFound(errHandler)
+	//mux.MethodNotAllowed(errHandler)
 
 	return mux
 }
