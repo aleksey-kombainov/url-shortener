@@ -10,7 +10,7 @@ import (
 const (
 	tableName              = "shortcut"
 	shortcutIdxShortURL    = "shortcut__index_short_url"
-	shortcutIdxOriginalURL = "shortcut__index_short_url"
+	shortcutIdxOriginalURL = "shortcut__index_original_url"
 )
 
 func createScheme(ctx context.Context, conn *pgx.Conn, logger *zerolog.Logger) error {
