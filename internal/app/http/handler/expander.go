@@ -18,6 +18,7 @@ func NewExpanderHandler(logger *zerolog.Logger, shortcutService *app.ShortcutSer
 }
 
 func (h ExpanderHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	h.logger.Debug().Msgf("got req: ", req.RequestURI)
 	shortcut := h.urlService.GetShortcutFromURI(req.RequestURI)
 	if len(shortcut) == 0 {
 		h.httpError(res, "invalid shortcut")
@@ -29,7 +30,6 @@ func (h ExpanderHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		h.httpError(res, "shortcut not found")
 		return
 	}
-	h.logger.Debug().Msgf("found url: %s", url)
 	res.Header().Add(headers.Location, url) // @todo проверить редирект на самого себя
 	res.WriteHeader(http.StatusTemporaryRedirect)
 }
