@@ -29,7 +29,7 @@ func (h ExpanderHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		h.httpError(res, "shortcut not found")
 		return
 	}
-	h.logger.Debug().Msgf("found url: $s", url)
+	h.logger.Debug().Msgf("found url: %s", url)
 	res.Header().Add(headers.Location, url) // @todo проверить редирект на самого себя
 	res.WriteHeader(http.StatusTemporaryRedirect)
 }
