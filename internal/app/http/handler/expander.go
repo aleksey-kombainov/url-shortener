@@ -18,7 +18,7 @@ func NewExpanderHandler(logger *zerolog.Logger, shortcutService *app.ShortcutSer
 }
 
 func (h ExpanderHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	h.logger.Debug().Msgf("got req: ", req.RequestURI)
+	h.logger.Debug().Msgf("got req: %s", req.RequestURI)
 	shortcut := h.urlService.GetShortcutFromURI(req.RequestURI)
 	if len(shortcut) == 0 {
 		h.httpError(res, "invalid shortcut")
