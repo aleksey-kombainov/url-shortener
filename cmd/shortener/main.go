@@ -36,12 +36,12 @@ func main() {
 		storageInstance, err = storage.ShortcutStorageFactory(ctx, &loggerInstance, storage.TypeMemory, "")
 	}
 	if err != nil {
-		loggerInstance.Error().Msgf("cant get storage: %w", err)
+		loggerInstance.Error().Msgf("cant get storage: %s", err)
 		shutdown(&loggerInstance)
 	} else {
 		defer func() {
 			if err := storageInstance.Close(context.TODO()); err != nil {
-				loggerInstance.Error().Msgf("can't close storage: %w")
+				loggerInstance.Error().Msgf("can't close storage: %s", err)
 			}
 		}()
 	}
@@ -51,14 +51,14 @@ func main() {
 	shortcutService := app.NewShortcutService(&loggerInstance, storageInstance)
 	urlManagerService, err := app.NewURLManagerServiceFromFullURL(options.BaseURL)
 	if err != nil {
-		loggerInstance.Error().Msgf("cant instantiate NewURLManagerServiceFromFullURL: %w", err)
+		loggerInstance.Error().Msgf("cant instantiate NewURLManagerServiceFromFullURL: %s", err)
 		shutdown(&loggerInstance)
 	}
 
 	mux := http.GetRouter(&loggerInstance, shortcutService, urlManagerService)
 
 	if err := nethttp.ListenAndServe(options.ServerListenAddr, mux); err != nil {
-		loggerInstance.Error().Msgf("can't start server: ", err)
+		loggerInstance.Error().Msgf("can't start server: %s", err)
 		shutdown(&loggerInstance)
 	}
 }
