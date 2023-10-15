@@ -5,6 +5,6 @@ import (
 	"os"
 )
 
-func GetLogger() zerolog.Logger {
-	return zerolog.New(os.Stdout).Level(zerolog.InfoLevel)
+func GetLogger(logLvl zerolog.Level) zerolog.Logger {
+	return zerolog.New(os.Stdout).Level(logLvl)
 }

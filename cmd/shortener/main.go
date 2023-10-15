@@ -17,9 +17,10 @@ import (
 func main() {
 	var err error
 
-	loggerInstance := logger.GetLogger()
+	loggerInstance := logger.GetLogger(zerolog.DebugLevel)
 
 	options := config.GetOptions(loggerInstance)
+	loggerInstance.Debug().Msgf("options: %+v", options)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
