@@ -43,12 +43,17 @@ func (h ShortenerBatchAPIHandler) ServeHTTP(res http.ResponseWriter, req *http.R
 		return
 	}
 
-	responseJSON, err := h.shortcutService.MakeShortcutBatch(context.TODO(), shortenerRequest)
+	shortenerBatchRecordResponses, err := h.shortcutService.MakeShortcutBatch(context.TODO(), shortenerRequest)
 	if err != nil {
 		h.httpError(res, err.Error(), http.StatusBadRequest)
 		return
 	}
-	response, err := json.Marshal(responseJSON)
+
+	for idx, respRecord := range shortenerBatchRecordResponses {
+		shortenerBatchRecordResponses[idx].ShortURL = h.urlService.BuildFullURLByShortcut(respRecord.ShortURL)
+	}
+
+	response, err := json.Marshal(shortenerBatchRecordResponses)
 	if err != nil {
 		h.httpError(res, "Marshalling error: "+err.Error(), http.StatusBadRequest)
 		return
