@@ -17,8 +17,8 @@ var defaultOptions = Options{
 	ServerListenAddr: ":8080",
 	BaseURL:          "http://localhost:8080",
 	FileStoragePath:  "/tmp/short-url-db.json",
-	DatabaseDsn:      "postgres://shortener_user:12345@localhost:5432/shortener",
-	//DatabaseDsn: "",
+	//DatabaseDsn:      "postgres://shortener_user:12345@localhost:5432/shortener",
+	DatabaseDsn: "",
 }
 
 func GetOptions(logger zerolog.Logger) (opts Options) {
