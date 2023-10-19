@@ -11,11 +11,13 @@ import (
 	"time"
 )
 
+type CtxUserID string
+
 const (
-	CtxUserIDKey   = "UserID"
-	authCookieName = "auth"
-	tokenExpire    = time.Hour * 2 * 24
-	secretKey      = "supersecretkey"
+	CtxUserIDKey   CtxUserID = "userID"
+	authCookieName           = "auth"
+	tokenExpire              = time.Hour * 2 * 24
+	secretKey                = "supersecretkey"
 )
 
 type Claims struct {
