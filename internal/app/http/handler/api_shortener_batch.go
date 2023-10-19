@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/model"
-	"github.com/aleksey-kombainov/url-shortener.git/internal/app/user"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
 	"github.com/rs/zerolog"
@@ -44,7 +43,7 @@ func (h ShortenerBatchAPIHandler) ServeHTTP(res nethttp.ResponseWriter, req *net
 		return
 	}
 
-	userID := req.Context().Value(user.CtxUserIDKey).(string)
+	userID := getUserIDFromCtx(req.Context())
 	shortenerBatchRecordResponses, err := h.shortcutService.MakeShortcutBatch(context.TODO(), shortenerRequest, userID)
 	if err != nil {
 		h.httpError(res, err.Error(), nethttp.StatusBadRequest)

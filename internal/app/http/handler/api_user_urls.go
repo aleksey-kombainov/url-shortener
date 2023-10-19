@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
-	"github.com/aleksey-kombainov/url-shortener.git/internal/app/user"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
 	"github.com/rs/zerolog"
@@ -22,7 +21,7 @@ func NewUserURLsAPIHandler(logger *zerolog.Logger, shortcutService *app.Shortcut
 
 func (h UserURLsAPIHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
-	userID := req.Context().Value(user.CtxUserIDKey).(string)
+	userID := getUserIDFromCtx(req.Context())
 	if userID == "" {
 		h.httpError(res, "", http.StatusUnauthorized)
 		return
