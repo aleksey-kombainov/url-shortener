@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/user"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
@@ -11,13 +12,10 @@ import (
 	"time"
 )
 
-type CtxUserID string
-
 const (
-	CtxUserIDKey   CtxUserID = "userID"
-	authCookieName           = "auth"
-	tokenExpire              = time.Hour * 2 * 24
-	secretKey                = "supersecretkey"
+	authCookieName = "auth"
+	tokenExpire    = time.Hour * 2 * 24
+	secretKey      = "supersecretkey"
 )
 
 type Claims struct {
@@ -68,7 +66,7 @@ func (m AuthMiddleware) Handler(next http.Handler) http.Handler {
 			}
 		}
 
-		ctx := context.WithValue(request.Context(), CtxUserIDKey, userID)
+		ctx := context.WithValue(request.Context(), user.CtxUserIDKey, userID)
 		next.ServeHTTP(respWriter, request.WithContext(ctx))
 	})
 }
@@ -92,7 +90,8 @@ func (m AuthMiddleware) buildJWTString(userID string) (tokenString string, err e
 }
 
 func (m AuthMiddleware) getClaims(tokenString string) (claims Claims, err error) {
-	token, err := jwt.ParseWithClaims(tokenString, claims,
+	claims = Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, &claims,
 		func(t *jwt.Token) (interface{}, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])

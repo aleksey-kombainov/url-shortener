@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/entities"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/interfaces"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/model"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/random"
@@ -17,7 +18,7 @@ const (
 	shortcutLength          = 8
 )
 
-type storageSaver func(ctx context.Context, origURL string, shortURL string) (err error)
+type storageSaver func(ctx context.Context, origURL string, shortURL string, userID string) (err error)
 
 type ShortcutService struct {
 	logger  *zerolog.Logger
@@ -31,8 +32,8 @@ func NewShortcutService(logger *zerolog.Logger, storage interfaces.ShortcutStora
 	}
 }
 
-func (s ShortcutService) MakeShortcut(url string) (shortcut string, err error) {
-	shortcut, err = s.generateAndSaveShortcut(url, (*s.Storage).CreateRecord)
+func (s ShortcutService) MakeShortcut(url string, userID string) (shortcut string, err error) {
+	shortcut, err = s.generateAndSaveShortcut(url, userID, (*s.Storage).CreateRecord)
 	if errors.Is(err, storageerr.ErrNotUniqueOriginalURL) {
 		gotShortcut, errGettingShortcut := (*s.Storage).GetShortcutByOriginalURL(context.TODO(), url)
 		if errGettingShortcut != nil {
@@ -43,7 +44,7 @@ func (s ShortcutService) MakeShortcut(url string) (shortcut string, err error) {
 	return
 }
 
-func (s ShortcutService) generateAndSaveShortcut(url string, saveMethod storageSaver) (shortcut string, err error) {
+func (s ShortcutService) generateAndSaveShortcut(url string, userID string, saveMethod storageSaver) (shortcut string, err error) {
 	if url == "" {
 		return "", errors.New("url is empty")
 	}
@@ -51,7 +52,7 @@ func (s ShortcutService) generateAndSaveShortcut(url string, saveMethod storageS
 	for i := 0; i < generatorIterationLimit; i++ {
 		shortcut = random.GenString(shortcutLength)
 
-		err = saveMethod(context.TODO(), url, shortcut)
+		err = saveMethod(context.TODO(), url, shortcut, userID)
 
 		if err == nil {
 			isGenerated = true
@@ -69,7 +70,7 @@ func (s ShortcutService) generateAndSaveShortcut(url string, saveMethod storageS
 	return
 }
 
-func (s ShortcutService) MakeShortcutBatch(ctx context.Context, batch []model.ShortenerBatchRecordRequest) (result []model.ShortenerBatchRecordResponse, err error) {
+func (s ShortcutService) MakeShortcutBatch(ctx context.Context, batch []model.ShortenerBatchRecordRequest, userID string) (result []model.ShortenerBatchRecordResponse, err error) {
 	batchStorage, err := (*s.Storage).NewBatch(ctx)
 	if err != nil {
 		return
@@ -80,7 +81,7 @@ func (s ShortcutService) MakeShortcutBatch(ctx context.Context, batch []model.Sh
 		}
 	}()
 	for _, batchRecord := range batch {
-		shortcut, err := s.generateAndSaveShortcut(batchRecord.OriginalURL, batchStorage.CreateRecordBatch)
+		shortcut, err := s.generateAndSaveShortcut(batchRecord.OriginalURL, userID, batchStorage.CreateRecordBatch)
 		if err != nil {
 			if errRollback := batchStorage.RollbackBatch(context.TODO()); errRollback != nil {
 				return nil, fmt.Errorf("%w; can't rollback transaction: %w", err, errRollback)
@@ -103,4 +104,9 @@ func (s ShortcutService) GetShortcutByOriginalURL(origURL string) (shortURL stri
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	return (*s.Storage).GetShortcutByOriginalURL(ctx, origURL)
+}
+
+func (s ShortcutService) GetShortcutsByUser(userID string) (shortcuts []entities.Shortcut, err error) {
+	shortcuts, err = (*s.Storage).GetShortcutsByUser(context.Background(), userID)
+	return
 }

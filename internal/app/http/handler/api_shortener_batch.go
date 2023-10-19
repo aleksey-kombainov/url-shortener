@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/model"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/user"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
 	"github.com/rs/zerolog"
 	"io"
-	"net/http"
+	nethttp "net/http"
 )
 
 type ShortenerBatchAPIHandler struct {
@@ -22,7 +23,7 @@ func NewShortenerBatchAPIHandler(logger *zerolog.Logger, shortcutService *app.Sh
 	return &ShortenerBatchAPIHandler{logger: logger, shortcutService: shortcutService, urlService: urlService}
 }
 
-func (h ShortenerBatchAPIHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+func (h ShortenerBatchAPIHandler) ServeHTTP(res nethttp.ResponseWriter, req *nethttp.Request) {
 
 	defer func() {
 		if err := req.Body.Close(); err != nil {
@@ -32,20 +33,21 @@ func (h ShortenerBatchAPIHandler) ServeHTTP(res http.ResponseWriter, req *http.R
 	}()
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		h.httpError(res, "can not read req body: "+err.Error(), http.StatusBadRequest)
+		h.httpError(res, "can not read req body: "+err.Error(), nethttp.StatusBadRequest)
 		return
 	}
 
 	var shortenerRequest []model.ShortenerBatchRecordRequest
 	err = json.Unmarshal(body, &shortenerRequest)
 	if err != nil {
-		h.httpError(res, "Unmarshalling error: "+err.Error()+"; Body: "+string(body), http.StatusBadRequest)
+		h.httpError(res, "Unmarshalling error: "+err.Error()+"; Body: "+string(body), nethttp.StatusBadRequest)
 		return
 	}
 
-	shortenerBatchRecordResponses, err := h.shortcutService.MakeShortcutBatch(context.TODO(), shortenerRequest)
+	userID := req.Context().Value(user.CtxUserIDKey).(string)
+	shortenerBatchRecordResponses, err := h.shortcutService.MakeShortcutBatch(context.TODO(), shortenerRequest, userID)
 	if err != nil {
-		h.httpError(res, err.Error(), http.StatusBadRequest)
+		h.httpError(res, err.Error(), nethttp.StatusBadRequest)
 		return
 	}
 
@@ -55,21 +57,21 @@ func (h ShortenerBatchAPIHandler) ServeHTTP(res http.ResponseWriter, req *http.R
 
 	response, err := json.Marshal(shortenerBatchRecordResponses)
 	if err != nil {
-		h.httpError(res, "Marshalling error: "+err.Error(), http.StatusBadRequest)
+		h.httpError(res, "Marshalling error: "+err.Error(), nethttp.StatusBadRequest)
 		return
 	}
 
 	res.Header().Add(headers.ContentType, mimetype.ApplicationJSON)
-	res.WriteHeader(http.StatusCreated)
+	res.WriteHeader(nethttp.StatusCreated)
 
 	if _, err := res.Write(response); err != nil {
-		h.httpError(res, "Writing response error: "+err.Error(), http.StatusBadRequest)
+		h.httpError(res, "Writing response error: "+err.Error(), nethttp.StatusBadRequest)
 		return
 	}
 }
 
-func (h ShortenerBatchAPIHandler) httpError(res http.ResponseWriter, errStr string, httpStatus int) {
+func (h ShortenerBatchAPIHandler) httpError(res nethttp.ResponseWriter, errStr string, httpStatus int) {
 	h.logger.Error().
 		Msg("http error: " + errStr)
-	http.Error(res, errStr, httpStatus)
+	nethttp.Error(res, errStr, httpStatus)
 }

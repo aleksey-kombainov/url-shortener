@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/storage/storageerr"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/user"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
 	"github.com/rs/zerolog"
@@ -34,8 +35,10 @@ func (h ShortenerHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) 
 		h.httpError(res, err.Error())
 		return
 	}
+	userID := req.Context().Value(user.CtxUserIDKey).(string)
+
 	httpStatus := http.StatusCreated
-	shortcut, err := h.shortcutService.MakeShortcut(strings.TrimSpace(string(url)))
+	shortcut, err := h.shortcutService.MakeShortcut(strings.TrimSpace(string(url)), userID)
 	if errors.Is(err, storageerr.ErrNotUniqueOriginalURL) {
 		httpStatus = http.StatusConflict
 	} else if err != nil {

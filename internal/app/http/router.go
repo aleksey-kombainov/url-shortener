@@ -28,7 +28,7 @@ func GetRouter(logger *zerolog.Logger, shortcutService *app.ShortcutService, url
 		r.Use(authMiddleware)
 		r.Post("/shorten", handler.NewShortenerAPIHandler(logger, shortcutService, urlService).ServeHTTP)
 		r.Post("/shorten/batch", handler.NewShortenerBatchAPIHandler(logger, shortcutService, urlService).ServeHTTP)
-		r.Get("/user/urls", handler.NewShortenerBatchAPIHandler(logger, shortcutService, urlService).ServeHTTP)
+		r.Get("/user/urls", handler.NewUserURLsAPIHandler(logger, shortcutService, urlService).ServeHTTP)
 	})
 
 	//errHandler := handler.NewErrorHandler(logger).ServeHTTP

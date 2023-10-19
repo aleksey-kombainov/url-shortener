@@ -42,12 +42,13 @@ func (s Storage) NewBatcher(ctx context.Context) (*Storage, error) {
 	return &s, nil
 }
 
-func (s *Storage) CreateRecord(ctx context.Context, origURL string, shortURL string) (err error) {
+func (s *Storage) CreateRecord(ctx context.Context, origURL string, shortURL string, userID string) (err error) {
 	s.maxID++
 	rec := entities.Shortcut{
 		ID:          s.maxID,
 		ShortURL:    shortURL,
 		OriginalURL: origURL,
+		UserID:      userID,
 	}
 	if _, err = s.GetOriginalURLByShortcut(ctx, shortURL); err == nil {
 		return storageerr.ErrNotUniqueShortcut
@@ -126,7 +127,7 @@ func (s Storage) NewBatch(ctx context.Context) (interfaces.ShortcutStorager, err
 	panic("implement me")
 }
 
-func (s Storage) CreateRecordBatch(ctx context.Context, origURL string, shortURL string) (err error) {
+func (s Storage) CreateRecordBatch(ctx context.Context, origURL string, shortURL string, userID string) (err error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -139,4 +140,13 @@ func (s Storage) CommitBatch(ctx context.Context) error {
 func (s Storage) RollbackBatch(ctx context.Context) error {
 	//TODO implement me
 	panic("implement me")
+}
+
+func (s Storage) GetShortcutsByUser(ctx context.Context, userID string) (shortcuts []entities.Shortcut, err error) {
+	for _, sh := range s.shortcutList {
+		if sh.UserID == userID {
+			shortcuts = append(shortcuts, sh)
+		}
+	}
+	return
 }

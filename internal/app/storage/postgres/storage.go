@@ -15,7 +15,7 @@ import (
 
 const (
 	preparedStmtInsertName = "preparedStmtInsertName"
-	insertStmt             = `INSERT INTO shortcut (short_url, original_url) VALUES($1, $2) RETURNING id`
+	insertStmt             = `INSERT INTO shortcut (short_url, original_url, user_id) VALUES($1, $2, $3) RETURNING id`
 )
 
 // @todo логика реконекта
@@ -82,18 +82,28 @@ func (s Storage) RollbackBatch(ctx context.Context) (err error) {
 	return
 }
 
-func (s *Storage) CreateRecordBatch(ctx context.Context, origURL string, shortURL string) (err error) {
-	if _, err = s.tx.Exec(ctx, preparedStmtInsertName, shortURL, origURL); err != nil {
+func (s *Storage) CreateRecordBatch(ctx context.Context, origURL string, shortURL string, userID string) (err error) {
+	if userID == "" {
+		_, err = s.tx.Exec(ctx, preparedStmtInsertName, shortURL, origURL, nil)
+	} else {
+		_, err = s.tx.Exec(ctx, preparedStmtInsertName, shortURL, origURL, userID)
+	}
+	if err != nil {
 		return processInsertStmtError(err)
 	}
-	return nil
+	return
 }
 
-func (s *Storage) CreateRecord(ctx context.Context, origURL string, shortURL string) (err error) {
-	if _, err = s.conn.Exec(ctx, insertStmt, shortURL, origURL); err != nil {
+func (s *Storage) CreateRecord(ctx context.Context, origURL string, shortURL string, userID string) (err error) {
+	if userID == "" {
+		_, err = s.conn.Exec(ctx, insertStmt, shortURL, origURL, nil)
+	} else {
+		_, err = s.conn.Exec(ctx, insertStmt, shortURL, origURL, userID)
+	}
+	if err != nil {
 		return processInsertStmtError(err)
 	}
-	return nil
+	return
 }
 
 func processInsertStmtError(err error) error {
@@ -143,4 +153,14 @@ func (s Storage) Close(ctx context.Context) (err error) {
 
 func (s Storage) Ping(ctx context.Context) (err error) {
 	return s.conn.Ping(ctx)
+}
+
+func (s Storage) GetShortcutsByUser(ctx context.Context, userID string) (shortcuts []entities.Shortcut, err error) {
+	sql := fmt.Sprintf("SELECT id, short_url, original_url FROM %s WHERE user_id = $1", tableName)
+	rows, err := s.conn.Query(ctx, sql, userID)
+	if err != nil {
+		return
+	}
+	err = pgxscan.ScanAll(&shortcuts, rows)
+	return
 }
