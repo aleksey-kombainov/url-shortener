@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/model"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
 	"github.com/rs/zerolog"
@@ -36,7 +37,14 @@ func (h UserURLsAPIHandler) ServeHTTP(res http.ResponseWriter, req *http.Request
 		h.httpError(res, "", http.StatusNoContent)
 		return
 	}
-	response, err := json.Marshal(shortcuts)
+	var result []model.ShortenerRecord
+	for _, sc := range shortcuts {
+		result = append(result, model.ShortenerRecord{
+			ShortURL:    h.urlService.BuildFullURLByShortcut(sc.ShortURL),
+			OriginalURL: sc.OriginalURL,
+		})
+	}
+	response, err := json.Marshal(result)
 	if err != nil {
 		h.httpError(res, "Marshalling error: "+err.Error(), http.StatusInternalServerError)
 	}
