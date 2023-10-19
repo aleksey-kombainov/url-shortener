@@ -8,6 +8,8 @@ import (
 )
 
 func GetRouter(logger *zerolog.Logger, shortcutService *app.ShortcutService, urlService *app.URLManagerService) *chi.Mux {
+	authMiddleware := NewAuthMiddleware(logger).Handler
+
 	mux := chi.NewRouter()
 
 	mux.Use(NewLoggerEncoderMiddleware(logger).Handler)
@@ -16,15 +18,17 @@ func GetRouter(logger *zerolog.Logger, shortcutService *app.ShortcutService, url
 		r.Use(NewTextPlainMiddleware(logger).Handler)
 
 		mux.Post("/", handler.NewShortenerHandler(logger, shortcutService, urlService).ServeHTTP)
-
-		mux.Get("/{shortcut}", handler.NewExpanderHandler(logger, shortcutService, urlService).ServeHTTP)
 		mux.Get("/ping", handler.NewPingHandler(logger, *shortcutService.Storage).ServeHTTP)
+
+		mux.With(authMiddleware).Get("/{shortcut}", handler.NewExpanderHandler(logger, shortcutService, urlService).ServeHTTP)
 	})
 
 	mux.Route("/api", func(r chi.Router) {
 		r.Use(NewAPIMiddleware(logger).Handler)
+		r.Use(authMiddleware)
 		r.Post("/shorten", handler.NewShortenerAPIHandler(logger, shortcutService, urlService).ServeHTTP)
 		r.Post("/shorten/batch", handler.NewShortenerBatchAPIHandler(logger, shortcutService, urlService).ServeHTTP)
+		r.Get("/user/urls", handler.NewShortenerBatchAPIHandler(logger, shortcutService, urlService).ServeHTTP)
 	})
 
 	//errHandler := handler.NewErrorHandler(logger).ServeHTTP
