@@ -1,6 +1,8 @@
 package random
 
-import "math/rand"
+import (
+	"math/rand"
+)
 
 const alpha = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ"
 
