@@ -38,7 +38,7 @@ func (m AuthMiddleware) Handler(next http.Handler) http.Handler {
 
 		cookie, err := request.Cookie(authCookieName)
 		if errors.Is(err, http.ErrNoCookie) {
-			userID, err := m.generateUserID()
+			userID, err = m.generateUserID()
 			if err != nil {
 				m.logger.Error().Msgf("can't generate userID: %s", err.Error())
 			} else {
