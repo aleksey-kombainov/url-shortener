@@ -110,3 +110,11 @@ func (s ShortcutService) GetShortcutsByUser(userID string) (shortcuts []entities
 	shortcuts, err = (*s.Storage).GetShortcutsByUser(context.Background(), userID)
 	return
 }
+
+func (s ShortcutService) DeleteByIDsAndUser(shortcuts []string, userID string) (err error) {
+	if userID == "" {
+		return fmt.Errorf("invalid userID")
+	}
+	err = (*s.Storage).DeleteByShortcutsForUser(context.Background(), shortcuts, userID)
+	return
+}

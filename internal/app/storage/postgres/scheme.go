@@ -3,7 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
 
@@ -14,14 +14,15 @@ const (
 	shortcutIdxUserID      = "shortcut__index_user_id"
 )
 
-func createScheme(ctx context.Context, conn *pgx.Conn, logger *zerolog.Logger) error {
+func createScheme(ctx context.Context, conn *pgxpool.Conn, logger *zerolog.Logger) error {
 	dqlQueries := []string{
 		fmt.Sprintf(`create table %s
 			(
 				id           bigint primary key generated always as identity,
+				user_id uuid,
 				short_url    char(8) not null,
 				original_url varchar(255) not null,
-    			user_id uuid
+    			is_deleted boolean
 			)`, tableName),
 		fmt.Sprintf("create unique index %s	on shortcut (short_url)", shortcutIdxShortURL),
 		fmt.Sprintf("create unique index %s on shortcut (original_url)", shortcutIdxOriginalURL),

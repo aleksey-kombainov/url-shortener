@@ -18,4 +18,6 @@ type ShortcutStorager interface {
 	GetShortcutsByUser(ctx context.Context, userID string) (shortcuts []entities.Shortcut, err error)
 	Close(ctx context.Context) (err error)
 	Ping(ctx context.Context) (err error)
+
+	DeleteByShortcutsForUser(ctx context.Context, shortcuts []string, userID string) (err error)
 }

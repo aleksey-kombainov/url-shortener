@@ -5,21 +5,33 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
 
-func newConnection(ctx context.Context, dsn string) (conn *pgx.Conn, err error) {
-	conn, err = pgx.Connect(ctx, dsn)
+func newConnectionPool(ctx context.Context, dsn string, logger *zerolog.Logger) (conPool *pgxpool.Pool, err error) {
+	conPool, err = pgxpool.New(ctx, dsn)
+	if err != nil {
+		return nil, fmt.Errorf("can't connect to db for storage: %w", err)
+	}
+	con, err := conPool.Acquire(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to database: %w", err)
 	}
-	if err = conn.Ping(ctx); err != nil {
+	if err = con.Ping(ctx); err != nil {
 		return nil, fmt.Errorf("connection to database established, but ping() returned error: %w", err)
 	}
-	return conn, nil
+
+	err = checkDBSetup(ctx, con, logger)
+	if err != nil {
+		return
+	}
+
+	con.Release()
+	return
 }
 
-func checkDBSetup(ctx context.Context, conn *pgx.Conn, logger *zerolog.Logger) (err error) {
+func checkDBSetup(ctx context.Context, conn *pgxpool.Conn, logger *zerolog.Logger) (err error) {
 	exists, err := tableExists(ctx, conn, "shortcut")
 	if err != nil {
 		return
@@ -31,7 +43,7 @@ func checkDBSetup(ctx context.Context, conn *pgx.Conn, logger *zerolog.Logger) (
 	return
 }
 
-func tableExists(ctx context.Context, conn *pgx.Conn, tableName string) (bool, error) {
+func tableExists(ctx context.Context, conn *pgxpool.Conn, tableName string) (bool, error) {
 	sql := `SELECT EXISTS (
 		SELECT FROM 
 			information_schema.tables 
