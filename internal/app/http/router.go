@@ -14,6 +14,13 @@ func GetRouter(logger *zerolog.Logger, shortcutService *app.ShortcutService, url
 
 	mux.Use(NewLoggerEncoderMiddleware(logger).Handler)
 
+	textPlainMiddleware := NewTextPlainMiddleware(logger).Handler
+
+	mux.Get("/{shortcut}", handler.NewExpanderHandler(logger, shortcutService, urlService).ServeHTTP)
+
+	mux.With(textPlainMiddleware).With(authMiddleware).Post("/", handler.NewShortenerHandler(logger, shortcutService, urlService).ServeHTTP)
+	mux.With(textPlainMiddleware).Get("/ping", handler.NewPingHandler(logger, *shortcutService.Storage).ServeHTTP)
+
 	mux.Route("/api", func(r chi.Router) {
 		r.Use(NewAPIMiddleware(logger).Handler)
 		r.Use(authMiddleware)
@@ -22,19 +29,9 @@ func GetRouter(logger *zerolog.Logger, shortcutService *app.ShortcutService, url
 		r.Get("/user/urls", handler.NewUserURLsAPIHandler(logger, shortcutService, urlService).ServeHTTP)
 		r.Delete("/user/urls", handler.NewDeleteBatchAPIHandler(logger, shortcutService, urlService).ServeHTTP)
 	})
-
-	mux.Route("/", func(r chi.Router) {
-		r.Use(NewTextPlainMiddleware(logger).Handler)
-
-		r.Get("/{shortcut}", handler.NewExpanderHandler(logger, shortcutService, urlService).ServeHTTP)
-
-		r.With(authMiddleware).Post("/", handler.NewShortenerHandler(logger, shortcutService, urlService).ServeHTTP)
-		r.Get("/ping", handler.NewPingHandler(logger, *shortcutService.Storage).ServeHTTP)
-	})
-
-	//errHandler := handler.NewErrorHandler(logger).ServeHTTP
-	//mux.NotFound(errHandler)
-	//mux.MethodNotAllowed(errHandler)
+	errHandler := handler.NewErrorHandler(logger).ServeHTTP
+	mux.NotFound(errHandler)
+	mux.MethodNotAllowed(errHandler)
 
 	return mux
 }
