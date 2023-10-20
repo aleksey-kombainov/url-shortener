@@ -26,10 +26,10 @@ func GetRouter(logger *zerolog.Logger, shortcutService *app.ShortcutService, url
 	mux.Route("/", func(r chi.Router) {
 		r.Use(NewTextPlainMiddleware(logger).Handler)
 
+		r.Get("/{shortcut}", handler.NewExpanderHandler(logger, shortcutService, urlService).ServeHTTP)
+
 		r.With(authMiddleware).Post("/", handler.NewShortenerHandler(logger, shortcutService, urlService).ServeHTTP)
 		r.Get("/ping", handler.NewPingHandler(logger, *shortcutService.Storage).ServeHTTP)
-
-		r.Get("/{shortcut}", handler.NewExpanderHandler(logger, shortcutService, urlService).ServeHTTP)
 	})
 
 	//errHandler := handler.NewErrorHandler(logger).ServeHTTP
