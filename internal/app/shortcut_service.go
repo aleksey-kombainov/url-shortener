@@ -18,7 +18,7 @@ const (
 	shortcutLength          = 8
 )
 
-type storageSaver func(ctx context.Context, origURL string, shortURL string, userID string) (err error)
+type storageSaver func(ctx context.Context, origURL string, shortURL string, userID string) (shortcut entities.Shortcut, err error)
 
 type ShortcutService struct {
 	logger  *zerolog.Logger
@@ -32,27 +32,27 @@ func NewShortcutService(logger *zerolog.Logger, storage interfaces.ShortcutStora
 	}
 }
 
-func (s ShortcutService) MakeShortcut(url string, userID string) (shortcut string, err error) {
+func (s ShortcutService) MakeShortcut(url string, userID string) (shortcut entities.Shortcut, err error) {
 	shortcut, err = s.generateAndSaveShortcut(url, userID, (*s.Storage).CreateRecord)
 	if errors.Is(err, storageerr.ErrNotUniqueOriginalURL) {
-		gotShortcut, errGettingShortcut := (*s.Storage).GetShortcutByOriginalURL(context.TODO(), url)
+		shortcut, errGettingShortcut := (*s.Storage).GetShortcutByOriginalURL(context.TODO(), url)
 		if errGettingShortcut != nil {
-			return "", errGettingShortcut
+			return shortcut, errGettingShortcut
 		}
-		return gotShortcut, err
+		return shortcut, err
 	}
 	return
 }
 
-func (s ShortcutService) generateAndSaveShortcut(url string, userID string, saveMethod storageSaver) (shortcut string, err error) {
+func (s ShortcutService) generateAndSaveShortcut(url string, userID string, saveMethod storageSaver) (shortcut entities.Shortcut, err error) {
 	if url == "" {
-		return "", errors.New("url is empty")
+		return shortcut, errors.New("url is empty")
 	}
 	isGenerated := false
 	for i := 0; i < generatorIterationLimit; i++ {
-		shortcut = random.GenString(shortcutLength)
+		sh := random.GenString(shortcutLength)
 
-		err = saveMethod(context.TODO(), url, shortcut, userID)
+		shortcut, err = saveMethod(context.TODO(), url, sh, userID)
 
 		if err == nil {
 			isGenerated = true
@@ -61,11 +61,11 @@ func (s ShortcutService) generateAndSaveShortcut(url string, userID string, save
 			continue
 		} else {
 			//s.logger.Error().Msgf("creating shortcut - error while creating shortcut: %w", err)
-			return "", fmt.Errorf("creating shortcut - error while creating shortcut: %w", err)
+			return shortcut, fmt.Errorf("creating shortcut - error while creating shortcut: %w", err)
 		}
 	}
 	if !isGenerated {
-		return "", errors.New("generator limit exceeded")
+		return shortcut, errors.New("generator limit exceeded")
 	}
 	return
 }
@@ -88,19 +88,19 @@ func (s ShortcutService) MakeShortcutBatch(ctx context.Context, batch []model.Sh
 			}
 			return nil, err
 		}
-		result = append(result, model.ShortenerBatchRecordResponse{CorrelationID: batchRecord.CorrelationID, ShortURL: shortcut})
+		result = append(result, model.ShortenerBatchRecordResponse{CorrelationID: batchRecord.CorrelationID, ShortURL: shortcut.ShortURL})
 	}
 	err = batchStorage.CommitBatch(context.TODO())
 	return
 }
 
-func (s ShortcutService) GetOriginalURLByShortcut(shortcut string) (origURL string, err error) {
+func (s ShortcutService) GetOriginalURLByShortcut(shortURL string) (shortcut entities.Shortcut, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	return (*s.Storage).GetOriginalURLByShortcut(ctx, shortcut)
+	return (*s.Storage).GetOriginalURLByShortcut(ctx, shortURL)
 }
 
-func (s ShortcutService) GetShortcutByOriginalURL(origURL string) (shortURL string, err error) {
+func (s ShortcutService) GetShortcutByOriginalURL(origURL string) (shortcut entities.Shortcut, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	return (*s.Storage).GetShortcutByOriginalURL(ctx, origURL)

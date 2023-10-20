@@ -25,13 +25,17 @@ func (h ExpanderHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	// @todo errors
-	url, err := h.shortcutService.GetOriginalURLByShortcut(shortcut)
+	shortcutEntity, err := h.shortcutService.GetOriginalURLByShortcut(shortcut)
 	if err != nil {
 		h.httpError(res, "shortcut not found")
 		return
 	}
-	res.Header().Add(headers.Location, url) // @todo проверить редирект на самого себя
-	res.WriteHeader(http.StatusTemporaryRedirect)
+	if shortcutEntity.DeletedFlag {
+		res.WriteHeader(http.StatusGone)
+	} else {
+		res.Header().Add(headers.Location, shortcutEntity.OriginalURL) // @todo проверить редирект на самого себя
+		res.WriteHeader(http.StatusTemporaryRedirect)
+	}
 }
 
 func (h ExpanderHandler) httpError(res http.ResponseWriter, errStr string) {

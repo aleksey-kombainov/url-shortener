@@ -81,28 +81,44 @@ func (s Storage) RollbackBatch(ctx context.Context) (err error) {
 	return
 }
 
-func (s *Storage) CreateRecordBatch(ctx context.Context, origURL string, shortURL string, userID string) (err error) {
+func (s *Storage) CreateRecordBatch(ctx context.Context, origURL string, shortURL string, userID string) (shortcut entities.Shortcut, err error) {
+	var row pgx.Row
 	if userID == "" {
-		_, err = s.tx.Exec(ctx, preparedStmtInsertName, shortURL, origURL, nil)
+		row = s.connPool.QueryRow(ctx, insertStmt, shortURL, origURL, nil)
 	} else {
-		_, err = s.tx.Exec(ctx, preparedStmtInsertName, shortURL, origURL, userID)
+		row = s.connPool.QueryRow(ctx, insertStmt, shortURL, origURL, userID)
 	}
+	var id uint64
+	err = row.Scan(&id)
 	if err != nil {
-		return processInsertStmtError(err)
+		return shortcut, processInsertStmtError(err)
 	}
-	return
+	return entities.Shortcut{
+		ID:          id,
+		ShortURL:    shortURL,
+		OriginalURL: origURL,
+		UserID:      userID,
+	}, nil
 }
 
-func (s *Storage) CreateRecord(ctx context.Context, origURL string, shortURL string, userID string) (err error) {
+func (s *Storage) CreateRecord(ctx context.Context, origURL string, shortURL string, userID string) (shortcut entities.Shortcut, err error) {
+	var row pgx.Row
 	if userID == "" {
-		_, err = s.connPool.Exec(ctx, insertStmt, shortURL, origURL, nil)
+		row = s.connPool.QueryRow(ctx, insertStmt, shortURL, origURL, nil)
 	} else {
-		_, err = s.connPool.Exec(ctx, insertStmt, shortURL, origURL, userID)
+		row = s.connPool.QueryRow(ctx, insertStmt, shortURL, origURL, userID)
 	}
+	var id uint64
+	err = row.Scan(&id)
 	if err != nil {
-		return processInsertStmtError(err)
+		return shortcut, processInsertStmtError(err)
 	}
-	return
+	return entities.Shortcut{
+		ID:          id,
+		ShortURL:    shortURL,
+		OriginalURL: origURL,
+		UserID:      userID,
+	}, nil
 }
 
 func processInsertStmtError(err error) error {
@@ -121,29 +137,27 @@ func processInsertStmtError(err error) error {
 	}
 }
 
-func (s Storage) GetOriginalURLByShortcut(ctx context.Context, shortURL string) (origURL string, err error) {
+func (s Storage) GetOriginalURLByShortcut(ctx context.Context, shortURL string) (shortcut entities.Shortcut, err error) {
 
 	sql := fmt.Sprintf("SELECT id, short_url, original_url FROM %s WHERE short_url = $1", tableName)
-	var entity entities.Shortcut
-	err = pgxscan.Get(ctx, s.connPool, &entity, sql, shortURL)
+	err = pgxscan.Get(ctx, s.connPool, &shortcut, sql, shortURL)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
-		return "", storageerr.ErrEntityNotFound
+		return shortcut, storageerr.ErrEntityNotFound
 	} else if err != nil {
-		return "", err
+		return shortcut, err
 	}
-	return entity.OriginalURL, nil
+	return
 }
 
-func (s Storage) GetShortcutByOriginalURL(ctx context.Context, origURL string) (shortURL string, err error) {
+func (s Storage) GetShortcutByOriginalURL(ctx context.Context, origURL string) (shortcut entities.Shortcut, err error) {
 	sql := fmt.Sprintf("SELECT id, short_url, original_url FROM %s WHERE original_url = $1", tableName)
-	var entity entities.Shortcut
-	err = pgxscan.Get(ctx, s.connPool, &entity, sql, origURL)
+	err = pgxscan.Get(ctx, s.connPool, &shortcut, sql, origURL)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
-		return "", storageerr.ErrEntityNotFound
+		return shortcut, storageerr.ErrEntityNotFound
 	} else if err != nil {
-		return "", err
+		return shortcut, err
 	}
-	return entity.ShortURL, nil
+	return
 }
 
 func (s Storage) Close(ctx context.Context) (err error) {

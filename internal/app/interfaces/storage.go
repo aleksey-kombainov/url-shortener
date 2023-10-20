@@ -6,15 +6,15 @@ import (
 )
 
 type ShortcutStorager interface {
-	CreateRecord(ctx context.Context, origURL string, shortURL string, userID string) (err error)
+	CreateRecord(ctx context.Context, origURL string, shortURL string, userID string) (shortcut entities.Shortcut, err error)
 
 	NewBatch(ctx context.Context) (ShortcutStorager, error)
-	CreateRecordBatch(ctx context.Context, origURL string, shortURL string, userID string) (err error)
+	CreateRecordBatch(ctx context.Context, origURL string, shortURL string, userID string) (shortcut entities.Shortcut, err error)
 	CommitBatch(ctx context.Context) error
 	RollbackBatch(ctx context.Context) error
 
-	GetOriginalURLByShortcut(ctx context.Context, shortURL string) (origURL string, err error)
-	GetShortcutByOriginalURL(ctx context.Context, origURL string) (shortURL string, err error)
+	GetOriginalURLByShortcut(ctx context.Context, shortURL string) (shortcut entities.Shortcut, err error)
+	GetShortcutByOriginalURL(ctx context.Context, origURL string) (shortcut entities.Shortcut, err error)
 	GetShortcutsByUser(ctx context.Context, userID string) (shortcuts []entities.Shortcut, err error)
 	Close(ctx context.Context) (err error)
 	Ping(ctx context.Context) (err error)

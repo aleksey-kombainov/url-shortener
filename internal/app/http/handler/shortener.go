@@ -45,7 +45,7 @@ func (h ShortenerHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) 
 	}
 	res.Header().Add(headers.ContentType, mimetype.TextPlain)
 	res.WriteHeader(httpStatus)
-	if _, err := res.Write([]byte(h.urlService.BuildFullURLByShortcut(shortcut))); err != nil {
+	if _, err := res.Write([]byte(h.urlService.BuildFullURLByShortcut(shortcut.ShortURL))); err != nil {
 		h.logger.Error().
 			Msg("Can not Write response: " + err.Error())
 	}

@@ -54,7 +54,7 @@ func (h ShortenerAPIHandler) ServeHTTP(res http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	url := h.urlService.BuildFullURLByShortcut(shortcut)
+	url := h.urlService.BuildFullURLByShortcut(shortcut.ShortURL)
 	response, err := json.Marshal(model.ShortenerResponse{Result: url})
 	if err != nil {
 		h.httpError(res, "Marshalling error: "+err.Error())

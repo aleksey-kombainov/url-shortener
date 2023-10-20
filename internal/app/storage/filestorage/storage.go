@@ -42,20 +42,20 @@ func (s Storage) NewBatcher(ctx context.Context) (*Storage, error) {
 	return &s, nil
 }
 
-func (s *Storage) CreateRecord(ctx context.Context, origURL string, shortURL string, userID string) (err error) {
+func (s *Storage) CreateRecord(ctx context.Context, origURL string, shortURL string, userID string) (shortcut entities.Shortcut, err error) {
 	s.maxID++
-	rec := entities.Shortcut{
+	shortcut = entities.Shortcut{
 		ID:          s.maxID,
 		ShortURL:    shortURL,
 		OriginalURL: origURL,
 		UserID:      userID,
 	}
 	if _, err = s.GetOriginalURLByShortcut(ctx, shortURL); err == nil {
-		return storageerr.ErrNotUniqueShortcut
+		return shortcut, storageerr.ErrNotUniqueShortcut
 	} else if _, err = s.GetShortcutByOriginalURL(ctx, origURL); err == nil {
-		return storageerr.ErrNotUniqueOriginalURL
+		return shortcut, storageerr.ErrNotUniqueOriginalURL
 	}
-	dataStr, err := json.Marshal(rec)
+	dataStr, err := json.Marshal(shortcut)
 	if err != nil {
 		s.logger.Error().Msg("can not marshal new record: " + err.Error())
 		return
@@ -65,27 +65,27 @@ func (s *Storage) CreateRecord(ctx context.Context, origURL string, shortURL str
 		s.logger.Error().Msg("can not write new record: " + err.Error())
 		return
 	}
-	s.shortcutList = append(s.shortcutList, rec)
+	s.shortcutList = append(s.shortcutList, shortcut)
 
-	return nil
+	return
 }
 
-func (s Storage) GetOriginalURLByShortcut(ctx context.Context, shortURL string) (origURL string, err error) {
-	for _, sh := range s.shortcutList {
-		if sh.ShortURL == shortURL {
-			return sh.OriginalURL, nil
+func (s Storage) GetOriginalURLByShortcut(ctx context.Context, shortURL string) (shortcut entities.Shortcut, err error) {
+	for _, shortcut = range s.shortcutList {
+		if shortcut.ShortURL == shortURL {
+			return
 		}
 	}
-	return "", storageerr.ErrEntityNotFound
+	return shortcut, storageerr.ErrEntityNotFound
 }
 
-func (s Storage) GetShortcutByOriginalURL(tx context.Context, origURL string) (shortURL string, err error) {
-	for _, sh := range s.shortcutList {
-		if sh.OriginalURL == origURL {
-			return sh.ShortURL, nil
+func (s Storage) GetShortcutByOriginalURL(tx context.Context, origURL string) (shortcut entities.Shortcut, err error) {
+	for _, shortcut = range s.shortcutList {
+		if shortcut.OriginalURL == origURL {
+			return
 		}
 	}
-	return "", storageerr.ErrEntityNotFound
+	return shortcut, storageerr.ErrEntityNotFound
 }
 
 func (s *Storage) Close(tx context.Context) (err error) {
@@ -127,7 +127,7 @@ func (s Storage) NewBatch(ctx context.Context) (interfaces.ShortcutStorager, err
 	panic("implement me")
 }
 
-func (s Storage) CreateRecordBatch(ctx context.Context, origURL string, shortURL string, userID string) (err error) {
+func (s Storage) CreateRecordBatch(ctx context.Context, origURL string, shortURL string, userID string) (shortcut entities.Shortcut, err error) {
 	//TODO implement me
 	panic("implement me")
 }
