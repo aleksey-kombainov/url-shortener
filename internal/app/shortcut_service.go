@@ -75,11 +75,7 @@ func (s ShortcutService) MakeShortcutBatch(ctx context.Context, batch []model.Sh
 	if err != nil {
 		return
 	}
-	defer func() {
-		if err := batchStorage.Close(ctx); err != nil {
-			s.logger.Error().Msgf("can't close storage connection: %s", err)
-		}
-	}()
+
 	for _, batchRecord := range batch {
 		shortcut, err := s.generateAndSaveShortcut(batchRecord.OriginalURL, userID, batchStorage.CreateRecordBatch)
 		if err != nil {
