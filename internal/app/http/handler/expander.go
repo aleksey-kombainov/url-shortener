@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
 	"github.com/go-http-utils/headers"
 	"github.com/rs/zerolog"
@@ -27,7 +28,7 @@ func (h ExpanderHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	// @todo errors
 	shortcutEntity, err := h.shortcutService.GetOriginalURLByShortcut(shortcut)
 	if err != nil {
-		h.httpError(res, "shortcut not found")
+		h.httpError(res, fmt.Sprintf("shortcut not found: %s", err.Error()))
 		return
 	}
 	if shortcutEntity.DeletedFlag {
