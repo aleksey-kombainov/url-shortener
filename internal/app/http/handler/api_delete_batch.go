@@ -70,7 +70,7 @@ func (h DeleteBatchAPIHandler) flushDeleteQueue() {
 	ticker := time.NewTicker(10 * time.Second)
 
 	var deleteTasks []model.DeleteTask
-
+	//
 	for {
 		select {
 		case msg := <-h.deleteTasksChan:
