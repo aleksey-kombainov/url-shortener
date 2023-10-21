@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/entities"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/interfaces"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/model"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/storage/storageerr"
 	"github.com/rs/zerolog"
 	"os"
@@ -153,4 +154,8 @@ func (s Storage) GetShortcutsByUser(ctx context.Context, userID string) (shortcu
 
 func (s Storage) DeleteByShortcutsForUser(ctx context.Context, shortcuts []string, userID string) (err error) {
 	return
+}
+
+func (s Storage) DeleteByShortcutsAndUser(ctx context.Context, deleteTasks []model.DeleteTask) (err error) {
+	panic("implement me")
 }

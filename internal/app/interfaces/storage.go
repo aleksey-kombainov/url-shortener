@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/entities"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/model"
 )
 
 type ShortcutStorager interface {
@@ -20,4 +21,6 @@ type ShortcutStorager interface {
 	Ping(ctx context.Context) (err error)
 
 	DeleteByShortcutsForUser(ctx context.Context, shortcuts []string, userID string) (err error)
+
+	DeleteByShortcutsAndUser(ctx context.Context, deleteTasks []model.DeleteTask) (err error)
 }

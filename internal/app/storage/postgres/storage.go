@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/entities"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/interfaces"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app/model"
 	"github.com/aleksey-kombainov/url-shortener.git/internal/app/storage/storageerr"
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/jackc/pgx/v5"
@@ -183,11 +184,6 @@ func (s Storage) GetShortcutsByUser(ctx context.Context, userID string) (shortcu
 }
 
 func (s Storage) DeleteByShortcutsForUser(ctx context.Context, shortcuts []string, userID string) (err error) {
-	conn, err := s.connPool.Acquire(ctx)
-	if err != nil {
-		return
-	}
-	defer conn.Release()
 
 	sql := fmt.Sprintf("UPDATE %s SET is_deleted = true WHERE user_id = $1 AND short_url = ANY($2)", tableName)
 
@@ -215,6 +211,27 @@ func (s Storage) DeleteByShortcutsForUser(ctx context.Context, shortcuts []strin
 		}
 		if finished {
 			break
+		}
+	}
+	return
+}
+
+func (s Storage) DeleteByShortcutsAndUser(ctx context.Context, deleteTasks []model.DeleteTask) (err error) {
+
+	sql := fmt.Sprintf("UPDATE %s SET is_deleted = true WHERE user_id = $1 AND short_url = ANY($2)", tableName)
+
+	batch := &pgx.Batch{}
+	for idx, delTask := range deleteTasks {
+		batch.Queue(sql, delTask.UserID, delTask.ShortURLs)
+
+		if batch.Len() == deleteBatchSize || (idx == len(deleteTasks)-1) {
+			batchResults := s.connPool.SendBatch(ctx, batch)
+			err = batchResults.Close()
+			if err != nil {
+				s.logger.Error().Msgf("error while closing batch: %s", err.Error())
+				return
+			}
+			batch = &pgx.Batch{}
 		}
 	}
 	return

@@ -107,10 +107,14 @@ func (s ShortcutService) GetShortcutsByUser(userID string) (shortcuts []entities
 	return
 }
 
-func (s ShortcutService) DeleteByIDsAndUser(shortcuts []string, userID string) (err error) {
+func (s ShortcutService) DeleteByShortcutsForUser(shortcuts []string, userID string) (err error) {
 	if userID == "" {
 		return fmt.Errorf("invalid userID")
 	}
 	err = (*s.Storage).DeleteByShortcutsForUser(context.Background(), shortcuts, userID)
 	return
+}
+
+func (s ShortcutService) DeleteByShortcutsAndUser(ctx context.Context, deleteTasks []model.DeleteTask) error {
+	return (*s.Storage).DeleteByShortcutsAndUser(ctx, deleteTasks)
 }
