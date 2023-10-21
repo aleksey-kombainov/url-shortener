@@ -70,7 +70,7 @@ func (h DeleteBatchAPIHandler) flushDeleteQueue() {
 	ticker := time.NewTicker(10 * time.Second)
 
 	var deleteTasks []model.DeleteTask
-	//
+
 	for {
 		select {
 		case msg := <-h.deleteTasksChan:
@@ -84,7 +84,7 @@ func (h DeleteBatchAPIHandler) flushDeleteQueue() {
 			h.logger.Debug().Msgf("delete batch len: %d", len(deleteTasks))
 			err := h.shortcutService.DeleteByShortcutsAndUser(context.Background(), deleteTasks)
 			if err != nil {
-				h.logger.Error().Msgf("cannot save deleteTasks: %s", err.Error())
+				h.logger.Error().Msgf("cannot process deleteTasks: %s", err.Error())
 				// не будем стирать сообщения, попробуем отправить их чуть позже
 				continue
 			}

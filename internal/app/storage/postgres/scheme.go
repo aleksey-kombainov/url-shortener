@@ -11,7 +11,6 @@ const (
 	tableName                 = "shortcut"
 	shortcutIdxShortURL       = "shortcut__index_short_url"
 	shortcutIdxOriginalURL    = "shortcut__index_original_url"
-	shortcutIdxUserID         = "shortcut__index_user_id"
 	shortcutIdxUserIDShortURL = "shortcut__index_user_id_short_url"
 )
 
@@ -27,7 +26,6 @@ func createScheme(ctx context.Context, conn *pgxpool.Conn, logger *zerolog.Logge
 			)`, tableName),
 		fmt.Sprintf("create unique index %s	on shortcut (short_url)", shortcutIdxShortURL),
 		fmt.Sprintf("create unique index %s on shortcut (original_url)", shortcutIdxOriginalURL),
-		fmt.Sprintf("create index %s on shortcut (user_id)", shortcutIdxUserID),
 		fmt.Sprintf("create index %s on shortcut (user_id, short_url)", shortcutIdxUserIDShortURL),
 	}
 	tx, err := conn.Begin(ctx)

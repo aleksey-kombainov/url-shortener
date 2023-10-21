@@ -162,6 +162,7 @@ func (s Storage) GetShortcutByOriginalURL(ctx context.Context, origURL string) (
 }
 
 func (s Storage) Close(ctx context.Context) (err error) {
+	s.logger.Debug().Msg("closing db conn pool")
 	s.connPool.Close()
 	return
 }
