@@ -139,7 +139,7 @@ func processInsertStmtError(err error) error {
 
 func (s Storage) GetOriginalURLByShortcut(ctx context.Context, shortURL string) (shortcut entities.Shortcut, err error) {
 
-	sql := fmt.Sprintf("SELECT id, short_url, original_url FROM %s WHERE short_url = $1", tableName)
+	sql := fmt.Sprintf("SELECT * FROM %s WHERE short_url = $1", tableName)
 	err = pgxscan.Get(ctx, s.connPool, &shortcut, sql, shortURL)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return shortcut, storageerr.ErrEntityNotFound
@@ -150,7 +150,7 @@ func (s Storage) GetOriginalURLByShortcut(ctx context.Context, shortURL string) 
 }
 
 func (s Storage) GetShortcutByOriginalURL(ctx context.Context, origURL string) (shortcut entities.Shortcut, err error) {
-	sql := fmt.Sprintf("SELECT id, short_url, original_url FROM %s WHERE original_url = $1", tableName)
+	sql := fmt.Sprintf("SELECT * FROM %s WHERE original_url = $1", tableName)
 	err = pgxscan.Get(ctx, s.connPool, &shortcut, sql, origURL)
 	if err != nil && errors.Is(err, pgx.ErrNoRows) {
 		return shortcut, storageerr.ErrEntityNotFound
@@ -172,7 +172,7 @@ func (s Storage) Ping(ctx context.Context) (err error) {
 
 func (s Storage) GetShortcutsByUser(ctx context.Context, userID string) (shortcuts []entities.Shortcut, err error) {
 
-	sql := fmt.Sprintf("SELECT id, short_url, original_url FROM %s WHERE user_id = $1", tableName)
+	sql := fmt.Sprintf("SELECT * FROM %s WHERE user_id = $1", tableName)
 	rows, err := s.connPool.Query(ctx, sql, userID)
 	if err != nil {
 		return
@@ -189,7 +189,7 @@ func (s Storage) DeleteByShortcutsForUser(ctx context.Context, shortcuts []strin
 	}
 	defer conn.Release()
 
-	sql := fmt.Sprintf("UPDATE %s SET is_deleted = false WHERE user_id = $1 AND short_url = ANY($2)", tableName)
+	sql := fmt.Sprintf("UPDATE %s SET is_deleted = true WHERE user_id = $1 AND short_url = ANY($2)", tableName)
 
 	finished := false
 	startIdx := 0

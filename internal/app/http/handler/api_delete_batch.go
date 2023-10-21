@@ -40,11 +40,7 @@ func (h DeleteBatchAPIHandler) ServeHTTP(res nethttp.ResponseWriter, req *nethtt
 	}
 
 	userID := getUserIDFromCtx(req.Context())
-	err = h.shortcutService.DeleteByIDsAndUser(request, userID)
-	if err != nil {
-		h.httpError(res, err.Error(), nethttp.StatusInternalServerError)
-		return
-	}
+	go h.shortcutService.DeleteByIDsAndUser(request, userID)
 
 	res.WriteHeader(nethttp.StatusAccepted)
 }
