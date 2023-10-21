@@ -7,7 +7,10 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
+	"sync"
 )
+
+var setupDBOnce sync.Once
 
 func newConnectionPool(ctx context.Context, dsn string, logger *zerolog.Logger) (conPool *pgxpool.Pool, err error) {
 	//if strings.Contains(dsn, "?") {
@@ -28,10 +31,12 @@ func newConnectionPool(ctx context.Context, dsn string, logger *zerolog.Logger) 
 		return nil, fmt.Errorf("connection to database established, but ping() returned error: %w", err)
 	}
 
-	err = checkDBSetup(ctx, con, logger)
-	if err != nil {
-		return
-	}
+	setupDBOnce.Do(func() {
+		err = checkDBSetup(ctx, con, logger)
+		if err != nil {
+			logger.Fatal().Msg("can't setup db")
+		}
+	})
 
 	con.Release()
 	return

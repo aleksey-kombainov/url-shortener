@@ -17,10 +17,13 @@ import (
 
 const (
 	preparedStmtInsertName = "preparedStmtInsertName"
-	insertStmt             = `INSERT INTO shortcut (short_url, original_url, user_id) VALUES($1, $2, $3) RETURNING id`
+	preparedStmtDeleteName = "preparedStmtDeleteName"
 	deleteChunkSize        = 50
 	deleteBatchSize        = 100
 )
+
+var insertStmt = fmt.Sprintf("INSERT INTO %s (short_url, original_url, user_id) VALUES($1, $2, $3) RETURNING id", tableName)
+var deleteStmt = fmt.Sprintf("UPDATE %s SET is_deleted = true WHERE user_id = $1 AND short_url = ANY($2)", tableName)
 
 // @todo логика реконекта
 type Storage struct {
@@ -219,11 +222,9 @@ func (s Storage) DeleteByShortcutsForUser(ctx context.Context, shortcuts []strin
 
 func (s Storage) DeleteByShortcutsAndUser(ctx context.Context, deleteTasks []model.DeleteTask) (err error) {
 
-	sql := fmt.Sprintf("UPDATE %s SET is_deleted = true WHERE user_id = $1 AND short_url = ANY($2)", tableName)
-
 	batch := &pgx.Batch{}
 	for idx, delTask := range deleteTasks {
-		batch.Queue(sql, delTask.UserID, delTask.ShortURLs)
+		batch.Queue(deleteStmt, delTask.UserID, delTask.ShortURLs)
 
 		if batch.Len() == deleteBatchSize || (idx == len(deleteTasks)-1) {
 			batchResults := s.connPool.SendBatch(ctx, batch)
