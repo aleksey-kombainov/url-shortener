@@ -2,6 +2,7 @@ package http
 
 import (
 	"compress/gzip"
+	"fmt"
 	"github.com/go-http-utils/headers"
 	"github.com/ldez/mimetype"
 	"io"
@@ -87,8 +88,14 @@ func (c compressReader) Read(p []byte) (n int, err error) {
 }
 
 func (c *compressReader) Close() error {
-	if err := c.r.Close(); err != nil {
-		return err
+	zrErr := c.zr.Close()
+	rErr := c.r.Close()
+	if zrErr != nil && rErr != nil {
+		return fmt.Errorf("can't close both compressed and regular reader: %w; %w", zrErr, rErr)
+	} else if zrErr != nil {
+		return fmt.Errorf("can't close compressed reader: %w", zrErr)
+	} else if rErr != nil {
+		return fmt.Errorf("can't close regular reader: %w", rErr)
 	}
-	return c.zr.Close()
+	return nil
 }

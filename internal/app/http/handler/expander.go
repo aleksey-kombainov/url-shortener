@@ -1,0 +1,46 @@
+package handler
+
+import (
+	"fmt"
+	"github.com/aleksey-kombainov/url-shortener.git/internal/app"
+	"github.com/go-http-utils/headers"
+	"github.com/rs/zerolog"
+	"net/http"
+)
+
+type ExpanderHandler struct {
+	logger          *zerolog.Logger
+	shortcutService *app.ShortcutService
+	urlService      *app.URLManagerService
+}
+
+func NewExpanderHandler(logger *zerolog.Logger, shortcutService *app.ShortcutService, urlService *app.URLManagerService) *ExpanderHandler {
+	return &ExpanderHandler{logger: logger, shortcutService: shortcutService, urlService: urlService}
+}
+
+func (h ExpanderHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	h.logger.Debug().Msgf("got req: %s", req.RequestURI)
+	shortcut := h.urlService.GetShortcutFromURI(req.RequestURI)
+	if len(shortcut) == 0 {
+		h.httpError(res, "invalid shortcut")
+		return
+	}
+	// @todo errors
+	shortcutEntity, err := h.shortcutService.GetOriginalURLByShortcut(shortcut)
+	if err != nil {
+		h.httpError(res, fmt.Sprintf("shortcut not found: %s", err.Error()))
+		return
+	}
+	if shortcutEntity.DeletedFlag {
+		res.WriteHeader(http.StatusGone)
+	} else {
+		res.Header().Add(headers.Location, shortcutEntity.OriginalURL) // @todo проверить редирект на самого себя
+		res.WriteHeader(http.StatusTemporaryRedirect)
+	}
+}
+
+func (h ExpanderHandler) httpError(res http.ResponseWriter, errStr string) {
+	h.logger.Error().
+		Msg("http error: " + errStr)
+	http.Error(res, errStr, http.StatusBadRequest)
+}
