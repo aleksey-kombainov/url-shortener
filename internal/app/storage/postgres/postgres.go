@@ -7,9 +7,16 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
+	"strings"
 )
 
 func newConnectionPool(ctx context.Context, dsn string, logger *zerolog.Logger) (conPool *pgxpool.Pool, err error) {
+	if strings.Contains(dsn, "?") {
+		dsn = dsn + "&"
+	} else {
+		dsn = dsn + "?"
+	}
+	dsn += "&pool_max_conns=50"
 	conPool, err = pgxpool.New(ctx, dsn)
 	if err != nil {
 		return nil, fmt.Errorf("can't connect to db for storage: %w", err)
