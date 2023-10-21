@@ -22,7 +22,7 @@ func createScheme(ctx context.Context, conn *pgxpool.Conn, logger *zerolog.Logge
 				user_id uuid,
 				short_url    char(8) not null,
 				original_url varchar(255) not null,
-    			is_deleted boolean
+    			is_deleted BOOLEAN NOT NULL DEFAULT FALSE
 			)`, tableName),
 		fmt.Sprintf("create unique index %s	on shortcut (short_url)", shortcutIdxShortURL),
 		fmt.Sprintf("create unique index %s on shortcut (original_url)", shortcutIdxOriginalURL),
