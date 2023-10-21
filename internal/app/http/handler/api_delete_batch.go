@@ -38,8 +38,9 @@ func (h DeleteBatchAPIHandler) ServeHTTP(res nethttp.ResponseWriter, req *nethtt
 		h.httpError(res, "Unmarshalling error: "+err.Error()+"; Body: "+string(body), nethttp.StatusInternalServerError)
 		return
 	}
-
 	userID := getUserIDFromCtx(req.Context())
+	h.logger.Debug().Msgf("delete batch len: %d; userID: %s", len(request), userID)
+
 	go h.shortcutService.DeleteByIDsAndUser(request, userID)
 
 	res.WriteHeader(nethttp.StatusAccepted)

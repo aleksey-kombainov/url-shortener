@@ -17,7 +17,7 @@ import (
 const (
 	preparedStmtInsertName = "preparedStmtInsertName"
 	insertStmt             = `INSERT INTO shortcut (short_url, original_url, user_id) VALUES($1, $2, $3) RETURNING id`
-	deleteChunkSize        = 50 // для учебного проекта - минимальный
+	deleteChunkSize        = 50
 	deleteBatchSize        = 100
 )
 
