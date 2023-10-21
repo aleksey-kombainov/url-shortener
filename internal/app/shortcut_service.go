@@ -91,7 +91,7 @@ func (s ShortcutService) MakeShortcutBatch(ctx context.Context, batch []model.Sh
 }
 
 func (s ShortcutService) GetOriginalURLByShortcut(shortURL string) (shortcut entities.Shortcut, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	return (*s.Storage).GetOriginalURLByShortcut(ctx, shortURL)
 }
