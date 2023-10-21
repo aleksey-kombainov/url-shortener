@@ -210,6 +210,7 @@ func (s Storage) DeleteByShortcutsForUser(ctx context.Context, shortcuts []strin
 		batchResults := s.connPool.SendBatch(ctx, batch)
 		err = batchResults.Close()
 		if err != nil {
+			s.logger.Error().Msgf("error while closing batch: %s", err.Error())
 			return
 		}
 		if finished {
