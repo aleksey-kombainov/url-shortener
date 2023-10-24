@@ -17,9 +17,11 @@ func NewAPIMiddleware(logger *zerolog.Logger) *APIMiddleware {
 
 func (m APIMiddleware) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(respWriter http.ResponseWriter, request *http.Request) {
-		if vc := append(ValidEncodedContentTypesForShortener, mimetype.ApplicationJSON); !IsHeaderContainsMIMETypes(request.Header.Values(headers.ContentType), vc) {
-			http.Error(respWriter, "Content-type not allowed", http.StatusBadRequest)
-			return
+		if request.Method == http.MethodPost {
+			if vc := append(ValidEncodedContentTypesForShortener, mimetype.ApplicationJSON); !IsHeaderContainsMIMETypes(request.Header.Values(headers.ContentType), vc) {
+				http.Error(respWriter, "Content-type not allowed", http.StatusBadRequest)
+				return
+			}
 		}
 		next.ServeHTTP(respWriter, request)
 	})

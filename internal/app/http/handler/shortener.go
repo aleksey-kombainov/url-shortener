@@ -34,8 +34,9 @@ func (h ShortenerHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) 
 		h.httpError(res, err.Error())
 		return
 	}
+
 	httpStatus := http.StatusCreated
-	shortcut, err := h.shortcutService.MakeShortcut(strings.TrimSpace(string(url)))
+	shortcut, err := h.shortcutService.MakeShortcut(strings.TrimSpace(string(url)), getUserIDFromCtx(req.Context()))
 	if errors.Is(err, storageerr.ErrNotUniqueOriginalURL) {
 		httpStatus = http.StatusConflict
 	} else if err != nil {
@@ -44,7 +45,7 @@ func (h ShortenerHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) 
 	}
 	res.Header().Add(headers.ContentType, mimetype.TextPlain)
 	res.WriteHeader(httpStatus)
-	if _, err := res.Write([]byte(h.urlService.BuildFullURLByShortcut(shortcut))); err != nil {
+	if _, err := res.Write([]byte(h.urlService.BuildFullURLByShortcut(shortcut.ShortURL))); err != nil {
 		h.logger.Error().
 			Msg("Can not Write response: " + err.Error())
 	}

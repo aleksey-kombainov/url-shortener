@@ -24,5 +24,7 @@ func (h PingHandler) ServeHTTP(res http.ResponseWriter, _ *http.Request) {
 	if err := (*h.storage).Ping(ctx); err != nil {
 		(*h.logger).Error().Msg("unable to ping: " + err.Error())
 		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
 	}
+	res.WriteHeader(http.StatusOK)
 }

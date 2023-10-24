@@ -46,7 +46,7 @@ func (h ShortenerAPIHandler) ServeHTTP(res http.ResponseWriter, req *http.Reques
 	}
 
 	httpStatus := http.StatusCreated
-	shortcut, err := h.shortcutService.MakeShortcut(strings.TrimSpace(shortenerRequest.URL))
+	shortcut, err := h.shortcutService.MakeShortcut(strings.TrimSpace(shortenerRequest.URL), getUserIDFromCtx(req.Context()))
 	if errors.Is(err, storageerr.ErrNotUniqueOriginalURL) {
 		httpStatus = http.StatusConflict
 	} else if err != nil {
@@ -54,7 +54,7 @@ func (h ShortenerAPIHandler) ServeHTTP(res http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	url := h.urlService.BuildFullURLByShortcut(shortcut)
+	url := h.urlService.BuildFullURLByShortcut(shortcut.ShortURL)
 	response, err := json.Marshal(model.ShortenerResponse{Result: url})
 	if err != nil {
 		h.httpError(res, "Marshalling error: "+err.Error())

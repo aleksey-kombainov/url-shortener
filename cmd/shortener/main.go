@@ -22,7 +22,7 @@ func main() {
 	options := config.GetOptions(loggerInstance)
 	loggerInstance.Debug().Msgf("options: %+v", options)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	var storageInstance interfaces.ShortcutStorager
@@ -49,7 +49,7 @@ func main() {
 	shortcutService := app.NewShortcutService(&loggerInstance, storageInstance)
 	urlManagerService, err := app.NewURLManagerServiceFromFullURL(options.BaseURL)
 	if err != nil {
-		loggerInstance.Error().Msgf("cant instantiate NewURLManagerServiceFromFullURL: %s", err)
+		loggerInstance.Error().Msgf("can' t instantiate NewURLManagerServiceFromFullURL: %s", err)
 		shutdown(&loggerInstance)
 	}
 
